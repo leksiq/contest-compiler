@@ -67,7 +67,7 @@ class Preprocessor {
             new Preprocessor().run(args[0]);
         }
     }
-    
+
     private boolean debug = false;
     private String skipPrefix = null;
     
@@ -90,6 +90,7 @@ class Preprocessor {
 
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
                 getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(";"));
+        if(debug) { System.out.println("classpath: " + classPath); }
         
         String[] params = new String[6];
         params[0] = "javap.exe";
@@ -105,6 +106,7 @@ class Preprocessor {
         TreeSet<String> foundClassesAtMethod = new TreeSet<>();
         TreeSet<String> sources = new TreeSet<>();
         TreeSet<String> main_exceptions = new TreeSet<>();
+        TreeSet<String> probed_paths = new TreeSet<>();
         String[] main_java = new String[]{null};
         boolean[] failed = new boolean[]{false};
 
@@ -119,30 +121,40 @@ class Preprocessor {
         Walker walker = new Walker();
         
         BinaryOperator<File> findRecursive = (path1, filename1) -> {
-            File res1 = new File(path1.toString(), filename1.toString());
-            if(res1.exists() && !res1.isDirectory()) {
-                if(debug) { System.out.println(INDENTION + "found " + res1); }
-                return res1;
-            }
-            File[] files = path1.listFiles(f -> f.isDirectory());
-            for(File file: files) {
-                if(debug) { System.out.println(INDENTION + "probe " + file); }
-                res1 = walker.find.apply(file, filename1);
-                if(res1 != null) {
+            File res = null;
+            if(!probed_paths.contains(path1.toString())) {
+                probed_paths.add(path1.toString());
+                File res1 = new File(path1.toString(), filename1.toString());
+                if(res1.exists() && !res1.isDirectory()) {
+                    if(debug) { System.out.println(INDENTION + "found " + res1); }
                     return res1;
                 }
+                res1 = new File(path1.toString(), filename1.toString().replace(".java", ".class"));
+                if(res1.exists() && !res1.isDirectory()) {
+                    if(debug) { System.out.println(INDENTION + "found " + res1); }
+                    res = res1;
+                }
+                File[] files = path1.listFiles(f -> f.isDirectory());
+                for(File file: files) {
+                    if(debug) { System.out.println(INDENTION + "probe " + file); }
+                    res1 = walker.find.apply(file, filename1);
+                    if(res1 != null && !res1.toString().endsWith(".class")) {
+                        return res1;
+                    }
+                }
             }
-            return null;
+            return res;
         };
         
-        Function<File, JavaSource> getSourceFileEntry = filename -> {
+        walker.find = findRecursive;
+        
+        Function<File, JavaSource> getSourceFileEntry = (filename) -> {
             if(debug) { System.out.println(INDENTION + "searching " + filename); }
             JavaSource res = new JavaSource();
             Stream.concat(Stream.of("."), Arrays.stream(classPath.split(";"))).allMatch(path -> {
                 File fPath = new File(path);
                 if(debug) { System.out.println(INDENTION + "probe " + fPath); }
                 if(fPath.isDirectory()) {
-                    walker.find = findRecursive;
                     res.file = walker.find.apply(fPath, filename);
                     if(res.file != null) {
                         return false;
@@ -485,7 +497,26 @@ class Preprocessor {
             StringBuilder sb1 = new StringBuilder();
             String underline = "";
             while(java != null) {
-                JavaSource src = getSourceFileEntry.apply(new File(java));
+                probed_paths.clear();
+                File fJava = new File(java);
+                JavaSource src = getSourceFileEntry.apply(fJava);
+                if(src.file != null && src.file.toString().endsWith(".class")) {
+                    if(debug) { System.out.println("only class found: " + src.file); }
+                    String base = src.file.toString().substring(0, src.file.toString().length() - fJava.toString().replace(".java", ".class").length()).replace("\\", "/");
+                    File src1 = null;
+                    if(src1 == null && base.endsWith("build/classes/")) { // NetBeans
+                        src1 = new File(base.substring(0, base.indexOf("build/classes/")) + "src/" + java);
+                        if(debug) { System.out.println("probe NetBeans structure: " + src1); }
+                        if(!src1.exists() || src1.isDirectory()) {
+                            src1 = null;
+                        }
+                        //todo other structures
+                    }
+                    if(src1 != null) {
+                        src.file = src1;
+                        if(debug) { System.out.println("found: " + src.file); }
+                    }
+                }
                 if(src.file == null && src.jarFile == null) {
                     throw new IOException("source file not found: " + java);
                 }
