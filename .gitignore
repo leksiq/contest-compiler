@@ -1,9 +1,5 @@
 nbproject
-*.exe
-*.exe.*
 *.class
-_*.java
 build
-.idea
 build.xml
 dist
