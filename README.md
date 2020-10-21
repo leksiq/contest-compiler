@@ -33,7 +33,7 @@ The `process` method supplies you with `BufferedReader br` and `PrintWriter pw` 
                 @Override
                 public void process(BufferedReader br, PrintWriter pw) throws IOException {
                 
-                    /* your creartive code here */
+                    /* your creative code here */
                     
                 }
             }.run();
