@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class Solver {
@@ -73,11 +74,11 @@ public abstract class Solver {
     abstract public void process(final BufferedReader br, final PrintWriter pw) throws IOException;
 
     protected int[] readIntArray(final BufferedReader br) throws IOException {
-        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToInt(v -> Integer.valueOf(v)).toArray();
+        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
     }
 
     protected long[] readLongArray(final BufferedReader br) throws IOException {
-        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToLong(v -> Long.valueOf(v)).toArray();
+        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
     }
     
     protected String readString(final BufferedReader br) throws IOException {
@@ -85,11 +86,23 @@ public abstract class Solver {
     }
 
     protected String intArrayToString(final int[] a) {
-        return Arrays.stream(a).mapToObj(v -> Integer.toString(v)).collect(Collectors.joining(" "));
+        return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(" "));
     }
 
     protected String longArrayToString(final long[] a) {
-        return Arrays.stream(a).mapToObj(v -> Long.toString(v)).collect(Collectors.joining(" "));
+        return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(" "));
+    }
+
+    protected List<Long> longArrayToList(final long[] a) {
+        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Integer> intArrayToList(final int[] a) {
+        return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Long> intArrayToLongList(final int[] a) {
+        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
     public void run() throws IOException {
