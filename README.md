@@ -40,7 +40,7 @@ The `process` method supplies you with `BufferedReader br` and `PrintWriter pw` 
         }
     }
 
-There are some methods to simplify input and output routines:
+There are some methods to simplify routine actions:
 
     protected int[] readIntArray(final BufferedReader br) throws IOException;
 
@@ -52,11 +52,20 @@ There are some methods to simplify input and output routines:
 
     protected String longArrayToString(final long[] a);
     
+    protected List<Long> longArrayToList(final long[] a);
+
+    protected List<Integer> intArrayToList(final int[] a);
+    
+    protected List<Long> intArrayToLongList(final int[] a);
+    
 1. `readIntArray` splits input line delimited with spaces into `int[]`.
 1. `readLongArray` splits input line delimited with spaces into `long[]`.
 1. `readString` reads whole input line. 
 1. `intArrayToString` joins `int[]` into `String` delimited with spaces.
 1. `longArrayToString` joins `long[]` into `String` delimited with spaces.
+1. `longArrayToList` creates  `List<Long>` from `long[]`.
+1. `intArrayToList` creates  `List<Integer>` from `int[]`.
+1. `intArrayToLongList` creates  `List<Long>` from `int[]`.
 
 ### Demo
 
