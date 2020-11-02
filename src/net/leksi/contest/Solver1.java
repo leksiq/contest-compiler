@@ -23,17 +23,16 @@
  */
 package net.leksi.contest;
 
-import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
-public abstract class Solver {
+public abstract class Solver1 {
     
     protected String nameIn = null;
     protected String nameOut = null;
@@ -59,34 +58,30 @@ public abstract class Solver {
         }
     }
     /*-Preprocess-DONOTCOPY*/
-    private void preProcess(final BufferedReader br, final PrintWriter pw) throws IOException {
+    private void preProcess(final Scanner scanner, final PrintWriter pw) throws IOException {
         /*+Preprocess-DONOTCOPY*/
         Preprocess_DONOTCOPY();
         /*-Preprocess-DONOTCOPY*/
         if(!singleTest) {
-            int t = Integer.valueOf(br.readLine().trim());
+            int t = scanner.nextInt();
             while(t-- > 0) {
-                process(br, pw);
+                process(scanner, pw);
             }
         } else {
-            process(br, pw);
+            process(scanner, pw);
         }
     }
     
-    abstract public void process(final BufferedReader br, final PrintWriter pw) throws IOException;
+    abstract public void process(final Scanner scanner, final PrintWriter pw) throws IOException;
 
-    protected int[] readIntArray(final BufferedReader br) throws IOException {
-        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
+    protected int[] readIntArray(final Scanner scanner) throws IOException {
+        return Arrays.stream(scanner.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
     }
 
-    protected long[] readLongArray(final BufferedReader br) throws IOException {
-        return Arrays.stream(br.readLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
+    protected long[] readLongArray(final Scanner scanner) throws IOException {
+        return Arrays.stream(scanner.nextLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
     }
     
-    protected String readString(final BufferedReader br) throws IOException {
-        return br.readLine().trim();
-    }
-
     protected String intArrayToString(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(" "));
     }
@@ -110,19 +105,16 @@ public abstract class Solver {
     public void run() throws IOException {
         try {
             try (
-                FileReader fr = new FileReader(nameIn);
-                BufferedReader br = new BufferedReader(fr);
+                FileInputStream fis = new FileInputStream(nameIn);
                 PrintWriter pw = select_output();
             ) {
-                preProcess(br, pw);
+                preProcess(new Scanner(fis), pw);
             }
         } catch(Exception ex) {
             try (
-                InputStreamReader fr = new InputStreamReader(System.in);
-                BufferedReader br = new BufferedReader(fr);
                 PrintWriter pw = select_output();
             ) {
-                preProcess(br, pw);
+                preProcess(new Scanner(System.in), pw);
             }
         }
     }
