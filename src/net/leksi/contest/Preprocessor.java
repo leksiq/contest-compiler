@@ -88,16 +88,22 @@ class Preprocessor {
     public void run(final String arg) {
 //        System.out.println(arg);
 
+        if(debug) { System.out.println(System.getProperty("os.name")); }
+        
+        int os = System.getProperty("os.name").contains("Linux") ? 1 : 0;
+
+        String cpDelim = os == 1 ? ":" : ";";
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
-                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(";"));
+                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(cpDelim));
         if(debug) { System.out.println("classpath: " + classPath); }
         
         String[] params = new String[6];
-        params[0] = "javap.exe";
+        params[0] = os == 1 ? "javap":  "javap.exe";
         params[1] = "-c";
         params[2] = "-p";
         params[3] = "-classpath";
         params[4] = classPath;
+        
         
         ArrayList<String> queue = new ArrayList<>();
         TreeSet<String> touched = new TreeSet<>();
@@ -151,7 +157,7 @@ class Preprocessor {
         Function<File, JavaSource> getSourceFileEntry = (filename) -> {
             if(debug) { System.out.println(INDENTION + "searching " + filename); }
             JavaSource res = new JavaSource();
-            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(";"))).allMatch(path -> {
+            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(cpDelim))).allMatch(path -> {
                 File fPath = new File(path);
                 if(debug) { System.out.println(INDENTION + "probe " + fPath); }
                 if(fPath.isDirectory()) {
@@ -202,6 +208,7 @@ class Preprocessor {
 
                         try(
                             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                            BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                                 ) {
                             boolean skip = false;
                             String source = null;
@@ -447,6 +454,9 @@ class Preprocessor {
                                             throw new RuntimeException("Inconsistent case: " + wf[0] + " and " + line);
                                     }
                                 }
+                            }
+                            while ((line = error.readLine()) != null) {
+                                System.err.println(line);
                             }
                             if(debug) { System.out.println(INDENTION + "found: " + foundClasses); }
                             foundClasses.forEach(v -> {
