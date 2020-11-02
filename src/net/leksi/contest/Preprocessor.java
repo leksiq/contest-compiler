@@ -49,10 +49,10 @@ import java.util.stream.Stream;
 
 class Preprocessor {
     
-    enum WaitingFor {COMPILED, CLASS, METHOD_OR_FIELD, METHOD, FIELD, CODE, OPER, EXCEPTION_TABLE, TABLE_SWITCH, DONE, NONE};
+    enum WaitingFor {COMPILED, CLASS, METHOD_OR_FIELD, METHOD, FIELD, CODE, OPER, EXCEPTION_TABLE, TABLE_SWITCH, LOOKUP_SWITCH, DONE, NONE};
     
     static final String TOKENIZER = "\\s+|,|<|>|\\[|\\]|&|:";
-    static final String KEYWORDS = "public|private|protected|final|abstract|static|extends|implements|throws|void|int|char|long|double|float|boolean";
+    static final String KEYWORDS = "public|private|protected|final|abstract|static|extends|implements|throws|void|int|char|long|double|float|boolean|switch|case|break";
     static final String INDENTION = "    ";
     static final String ACCESS_KEYWORDS = "public|private|protected";
     
@@ -213,7 +213,7 @@ class Preprocessor {
                                 }
                                 if(debug) { System.out.println("javap: " + line); }
                                 if(line.isEmpty()) {
-                                    if(wf[0] != WaitingFor.TABLE_SWITCH && wf[0] != WaitingFor.NONE) {
+                                    if(wf[0] != WaitingFor.TABLE_SWITCH && wf[0] != WaitingFor.LOOKUP_SWITCH && wf[0] != WaitingFor.NONE) {
                                         wf[0] = WaitingFor.METHOD_OR_FIELD;
                                         skip = false;
                                     }
@@ -327,6 +327,7 @@ class Preprocessor {
                                             wf[0] = WaitingFor.OPER;
                                             break;
                                         case TABLE_SWITCH:
+                                        case LOOKUP_SWITCH:
                                             if("}".equals(line)) {
                                                 wf[0] = WaitingFor.OPER;
                                                 if(debug) { System.out.println(INDENTION + wf[0] + " OK" + (skip ? " (skipped)" : "")); }
@@ -349,6 +350,10 @@ class Preprocessor {
                                                 String s = tokens[i];
                                                 if(i == 1 && s.equals("tableswitch") && tokens[i + 1].equals("{")) {
                                                     wf[0] = WaitingFor.TABLE_SWITCH;
+                                                    break;
+                                                }
+                                                if(i == 1 && s.equals("lookupswitch") && tokens[i + 1].equals("{")) {
+                                                    wf[0] = WaitingFor.LOOKUP_SWITCH;
                                                     break;
                                                 }
                                                 if(selector == 0) {

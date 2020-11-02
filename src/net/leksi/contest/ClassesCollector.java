@@ -58,7 +58,7 @@ class ClassesCollector {
     
     public void collectClass(BufferedReader br, final StringBuilder sb, final String[] package0, final TreeSet<String> imports, final String class_name) {
         boolean[] donotcopy = new boolean[]{false};
-        String content = br.lines().filter(line -> {
+        String content = br.lines().map(line -> line.trim()).filter(line -> {
             if ("/*+Preprocess-DONOTCOPY*/".equals(line.trim())) {
                 donotcopy[0] = true;
                 return false;
@@ -145,8 +145,14 @@ class ClassesCollector {
                 }
             } else if (comment > 0) {
                 skip = true;
-                if (comment == 2 && c == '/' && i - 1 >= 0 && sb.charAt(i - 1) == '*') {
-                    comment = 0;
+                if(comment == 2 && c == '*') {
+                    comment = 3;
+                } else if(comment == 3) {
+                    if(c == '/') {
+                        comment = 0;
+                    } else {
+                        comment = 2;
+                    }
                 } else if (comment == 1 && (c == '\n' || c == '\r')) {
                     comment = 0;
                 }
