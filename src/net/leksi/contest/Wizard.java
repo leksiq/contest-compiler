@@ -23,10 +23,14 @@
  */
 package net.leksi.contest;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -35,13 +39,20 @@ import java.util.stream.Collectors;
  */
 public class Wizard {
     
-    static public void main(final String[] args) {
+    static public void main(final String[] args) throws IOException {
         new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
     }
 
     private static void usage() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        System.out.println("Usage: java java_options " + Wizard.class.getCanonicalName() + " wizard_options class-name script");
+        System.out.println("    java_options:           java options like -classpath;");
+        System.out.println("    wizard_options:");
+        System.out.println("        -src directory      - the directory to generate sources into (default .);");
+        System.out.println("        -package package    - the package of class to generate (default empty);");
+        System.out.println("        -force    - the package of class to generate (default empty);");
+        System.out.println("    class-name:             name of class to generate;");
+        System.out.println("    script:                 input script;");
     }
     
     interface IVariable {}
@@ -64,6 +75,7 @@ public class Wizard {
         Cycle parent = null;
         String class_name;
         int field_gen = 0;
+        boolean simple = false;
         @Override
         public String toString() {
             return String.format("{C:%s;[%s]}", 
@@ -78,11 +90,35 @@ public class Wizard {
     Stack<Cycle> cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
 
-    private void run(String[] args) {
-        if(args.length < 2) {
+    private void run(String[] args) throws IOException {
+        String pkg = null;
+        String src = ".";
+        String class_name = null;
+        String script = null;
+        
+        for(int i = 0 ; i < args.length; i++) {
+            if(args[i].startsWith("-")) {
+                if("-src".equals(args[i])) {
+                    i++;
+                    src = args[i];
+                } else if("-package".equals(args[i])) {
+                    i++;
+                    pkg = args[i];
+                }
+            } else if(class_name == null) {
+                class_name = args[i];
+            } else if(script == null) {
+                script = args[i];
+            } else {
+                usage();
+                return;
+            }
+        }
+        if(class_name == null || script == null) {
             usage();
             return;
         }
+        
         Variable var = null;
         Cycle last_cycle = null;
         
@@ -92,7 +128,7 @@ public class Wizard {
         last_cycle.count = "";
         all_cycles.add(last_cycle);
         
-        String script = args[1].trim();
+        
         boolean[] singleTest = new boolean[]{true};
         int i = 0;
         if(script.charAt(0) == '*') {
@@ -173,7 +209,7 @@ public class Wizard {
                     }
                 } else {
                     int j = i;
-                    for(; DELIMS.indexOf(script.charAt(j)) < 0 && !Character.isSpaceChar(script.charAt(j)); j++){}
+                    for(; j < script.length() && DELIMS.indexOf(script.charAt(j)) < 0 && !Character.isSpaceChar(script.charAt(j)); j++){}
                     String name = script.substring(i, j);
 //                    System.out.println(name);
                     if(wait_for_var) {
@@ -189,9 +225,11 @@ public class Wizard {
                         var.length = name;
                         var = null;
                     }
-                    for(; Character.isSpaceChar(script.charAt(j)); j++){}
-                    if(wf.indexOf(script.charAt(j)) < 0) {
-                        throw new RuntimeException("Unexpected symbol: '" + script.charAt(j) + "', expecting: \"" + wf + "\"");
+                    if(j < script.length()) {
+                        for(; Character.isSpaceChar(script.charAt(j)); j++){}
+                        if(wf.indexOf(script.charAt(j)) < 0) {
+                            throw new RuntimeException("Unexpected symbol: '" + script.charAt(j) + "', expecting: \"" + wf + "\"");
+                        }
                     }
                     i = j - 1;
                     wait_for_name = false;
@@ -204,7 +242,7 @@ public class Wizard {
             var.type = "/";
             last_cycle.variables.add(var);
         }
-        System.out.println(cycles);
+//        System.out.println(cycles);
         
         class Reenter {
             Consumer<Cycle> process;
@@ -212,72 +250,83 @@ public class Wizard {
         
         Reenter reenter = new Reenter();
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb0 = new StringBuilder();
+        if(pkg != null) {
+            sb0.append("package ").append(pkg).append(";\n");
+        }
+        sb0.append("import java.io.IOException;\n");
+        sb0.append("import net.leksi.contest.Solver;\n");
+        StringBuilder sb1 = new StringBuilder();
+        StringBuilder sb2 = new StringBuilder();
+        sb1.append("public class ").append(class_name).append(" extends Solver {\n");
+        sb1.append("    public ").append(class_name).append("() {\n");
+        sb1.append("        nameIn = \"").append(class_name).append(".in\"; singleTest = ").append(singleTest[0]).append(";\n");
+        sb1.append("    }\n");
+        sb2.append("    @Override\n");
+        sb2.append("    public void readInput() throws IOException {\n");
         
         int[] indention = new int[]{1};
         
         Supplier<String> indent = () -> String.format("%" + (indention[0] * 4) + "s", "");
+        UnaryOperator<String> type2 = s -> {
+            String type1 = "int";
+            switch (s.charAt(0)) {
+                case 'i':
+                    type1 = "int";
+                    break;
+                case 'l':
+                    type1 = "long";
+                    break;
+                case 'd':
+                    type1 = "double";
+                    break;
+                case 's':
+                    type1 = "String";
+                    break;
+                default:
+                    type1 = "int";
+                    break;
+            }
+            return type1;
+        };
+        UnaryOperator<String> next2 = s -> {
+            if(s.charAt(0) != 's') {
+                String type1 = type2.apply(s);
+                return type1.substring(0, 1).toUpperCase() + type1.substring(1);
+            }
+            return "";
+        };
         
         reenter.process = (cycle) -> {
-            cycle.class_name = "Cy" + class_gen[0]++;
-            cycle.sb_class.append("    static class ").append(cycle.class_name).append(" {\n");
-            indention[0]++;
-            if(cycle.parent == null) {
-                cycle.base = "input";
-                sb.append("import java.io.IOException;\n");
-                sb.append("import java.util.Arrays;\n");
-                sb.append("import net.leksi.contest.Solver;\n");
-                sb.append("public class ").append(args[0]).append(" extends Solver {\n");
-                sb.append("    private solve(final ").append(cycle.class_name).append(" input) {\n");
-                sb.append("    /*\n");
-                sb.append("     * Generated from \"").append(script).append("\".\n");
-                sb.append("     * Write your code below. *\n");
-                sb.append("     */\n");
-                sb.append("    }\n");
-                sb.append("    public ").append(args[0]).append("() {\n");
-                sb.append("        nameIn = \"").append(args[0]).append(".in\"; singleTest = ").append(singleTest[0]).append(";\n");
-                sb.append("    }\n");
-                sb.append("    static public void main(String[] args) throws IOException {\n");
-                sb.append("        new ").append(args[0]).append("().run();\n");
-                sb.append("    }\n");
-                sb.append("    @Override\n");
-                sb.append("    public void readInputAndSolve() throws IOException {\n");
-                sb.append("        ").append(cycle.class_name).append(" input = new ").append(cycle.class_name).append("();\n");
+            String[] indent1 = new String[]{"    "};
+            if(cycle.parent != null && !cycle.simple) {
+                cycle.sb_class.append("    static class ").append(cycle.class_name).append(" {\n");
+                indent1[0] += indent1[0];
             }
+            indention[0]++;
             boolean[] line_read = new boolean[]{false};
             cycle.variables.forEach(v -> {
                 if(v instanceof Variable) {
                     Variable vv = (Variable)v;
                     if(!"/".equals(vv.type)) {
-                        String type1;
                         String nextType;
-                        switch(vv.type.charAt(0)) {
-                            case 'i':
-                                type1 = "int";
-                                break;
-                            case 'l':
-                                type1 = "long";
-                                break;
-                            case 'd':
-                                type1 = "double";
-                                break;
-                            case 's':
-                                type1 = "String";
-                                break;
-                            default:
-                                type1 = "int";
-                                break;
-                        }
-                        String next = vv.type.charAt(0) != 's' ? type1.substring(0, 1).toUpperCase() + type1.substring(1) : "";
+                        String type1 = type2.apply(vv.type);
+                        String next = next2.apply(vv.type);
                         if(vv.type.endsWith("[")) {
                             type1 += "[]";
                         }
-                        cycle.sb_class.append("        ").append(type1).append(" ").append(vv.name).append(";\n");
+                        if(!cycle.simple) {
+                            cycle.sb_class.append(indent1[0]).append(type1).append(" ").append(vv.name).append(";\n");
+                        }
                         
-                        sb.append(indent.get()).append(cycle.base).append(".").append(vv.name);
+                        sb2.append(indent.get());
+                        if(cycle.base != null) {
+                            sb2.append(cycle.base).append(".");
+                        }
+                        sb2.append(vv.name);
                         if(vv.length != null) {
                             if(!"".equals(vv.length)) {
-                                sb.append(" = new ").append(type1).append("[");
+                                sb2.append(" = new ").append(type1).append("[");
                                 String count;
                                 try {
                                     int len = Integer.valueOf(vv.length);
@@ -285,61 +334,123 @@ public class Wizard {
                                 } catch(NumberFormatException e) {
                                     count =  cycle.base + "." + vv.length;
                                 }
-                                sb.append(count).append("]").append(";\n");
-                                sb.append(indent.get()).append("for(int ").append("_i_").append(vv.name).append(" = 0; _i_").
+                                sb2.append(count).append("]").append(";\n");
+                                sb2.append(indent.get()).append("for(int ").append("_i_").append(vv.name).append(" = 0; _i_").
                                         append(vv.name).append(" < ").append(count).append("; _i_").append(vv.name).append("++) {\n");
                                 indention[0]++;
-                                sb.append(indent.get()).append(cycle.base).append(".").append(vv.name).
+                                sb2.append(indent.get()).append(cycle.base).append(".").append(vv.name).
                                         append("[").append("_i_").append(vv.name).append("] = next").
                                         append(next).append("();\n");
                                 indention[0]--;
-                                sb.append(indent.get()).append("}\n");
+                                sb2.append(indent.get()).append("}\n");
                             } else {
                                 line_read[0] = true;
                                 if(vv.type.charAt(0) != 's') {
-                                    sb.append(" = Arrays.stream(").append("cs.nextLine().trim().split(\"\\\\s+\")).mapTo").append(next).append("(").
+                                    if(sb0.indexOf("java.util.Arrays") < 0) {
+                                        sb0.append("import java.util.Arrays;\n");
+                                    }
+                                    sb2.append(" = Arrays.stream(").append("sc.nextLine().trim().split(\"\\\\s+\")).mapTo").append(next).append("(").
                                             append(vv.type.charAt(0) == 'i' ? "Integer" : next).append("::valueOf).toArray()");
                                 } else {
-                                    sb.append(" = cs.nextLine().trim().split(\"\\\\s+\")");
+                                    sb2.append(" = sc.nextLine().trim().split(\"\\\\s+\")");
                                 }
-                                sb.append(";\n");
+                                sb2.append(";\n");
                             }
                         } else {
                             if(vv.type.charAt(0) != 's') {
-                                sb.append(" = sc.next").append(next).append(";\n");
+                                sb2.append(" = sc.next").append(next).append("();\n");
                             } else {
-                                sb.append(" = sc.nextLine().trim();\n");
+                                sb2.append(" = sc.nextLine().trim();\n");
                                 line_read[0] = true;
                             }
                         }
                     } else {
                         if(!line_read[0]) {
-                            sb.append(indent.get()).append("sc.nextLine();\n");
+                            sb2.append(indent.get()).append("sc.nextLine();\n");
                         }
                         line_read[0] = false;
                     }
                 } else {
                     Cycle cy = (Cycle)v;
-                    String field_name = "_f" + (cycle.field_gen++);
-                    cy.base = cycle.base + "." + field_name + "[" + "_i" + field_name + "]";
-                    sb.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; _i").
+                    String field_name;
+                    if(!cy.variables.stream().anyMatch(v1 -> (v1 instanceof Cycle)) && cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).count() <= 1) {
+                        Variable v2 = (Variable)cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).findFirst().get();
+                        field_name = v2.name;
+                        cy.class_name = type2.apply(v2.type);
+                        if(v2.length != null) {
+                            cy.class_name += "[]";
+                        }
+                        cy.base = cycle.base;
+                        cy.simple = true;
+                    } else {
+                        field_name = "_f" + (cycle.field_gen++);
+                        cy.class_name = "Cy" + class_gen[0]++;
+                        cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
+                    }
+                    sb2.append(indent.get());
+                    if (cycle.base != null) {
+                        sb2.append(cycle.base).append(".");
+                    }
+                    sb2.append(field_name).append(" = new ").append(cy.class_name.replace("[]", "")).append("[").append(cy.count).append("]");
+                    if(cy.class_name.endsWith("[]")) {
+                        sb2.append("[]");
+                    }
+                    sb2.append(";\n");
+                    sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; _i").
                             append(field_name).append(" < ").append(cy.count).append("; _i").append(field_name).append("++) {\n");
+                    if(!cy.simple) {
+                        sb2.append(indent.get()).append("    ").append(field_name).append("[_i").append(field_name).append("").append("] = new ").append(cy.class_name).append("();\n");
+                    }
                     reenter.process.accept(cy);
-                    sb.append(indent.get()).append("}\n");
-                    cycle.sb_class.append("        ").append(cy.class_name).append("[] ").append(field_name).append(";\n");
+                    sb2.append(indent.get()).append("}\n");
+                    cycle.sb_class.append(indent1[0]).append(cy.class_name).append("[] ").append(field_name).append(";\n");
                 }
             });
+            if(cycle.parent != null && !cycle.simple) {
+                cycle.sb_class.append("    ").append("}\n");
+            }
             indention[0]--;
-            cycle.sb_class.append("   ").append("}\n");
         };
         
         reenter.process.accept(all_cycles.get(0));
-        
+        sb1.append("    /*\n");
+        sb1.append("     * Generated from \"");
+        sb1.append(script);
+        sb1.append("\".\n");
+        sb1.append("     */\n");
+        sb1.append(all_cycles.get(0).sb_class);
+        sb1.append("    @Override\n");
+        sb1.append("    protected void solve() {\n");
+        sb1.append("        /*\n");
+        sb1.append("         * Write your code below.\n");
+        sb1.append("         */\n");
+        sb1.append("\n");
+        sb1.append("    }\n");
 
-        sb.append("        solve(input);\n");
-        sb.append("    }\n");
-        sb.append(all_cycles.stream().map(cy -> cy.sb_class).collect(Collectors.joining()));
-        sb.append("}\n");
-        System.out.println(sb);
+        sb1.append(all_cycles.stream().skip(1).map(cy -> cy.sb_class).collect(Collectors.joining()));
+        sb1.append(sb2);
+        sb1.append("    }\n");
+        sb1.append("    static public void main(String[] args) throws IOException {\n");
+        sb1.append("        new ").append(class_name).append("().run();\n");
+        sb1.append("    }\n");
+        sb1.append("}\n");
+        sb1.insert(0, sb0);
+        File src_file = new File(src);
+        if(pkg != null) {
+            for(String part: pkg.split("\\.")) {
+                src_file = new File(src_file, part);
+            }
+        }
+//        System.out.println(src_file);
+        if(!src_file.exists()) {
+            src_file.mkdirs();
+        }
+        src_file = new File(src_file, class_name + ".java");
+        
+        try (
+                FileWriter fw = new FileWriter(src_file);
+            ) {
+            fw.write(sb1.toString());
+        }
     }
 }

@@ -13,23 +13,23 @@ public class p001417A extends Solver {
     int n;
     int k;
     int[] a;
-    
-    static public void main(String[] args) throws IOException {
-        new p001417A().run();
-    }
 
     @Override
-    protected void readInputAndSolve() throws IOException {
+    protected void readInput() throws IOException {
         int[] nk = lineToIntArray();
         n = nk[0];
         k = nk[1];
         a = lineToIntArray();
-        solve();
     }
 
-    private void solve() throws IOException {
+    @Override
+    protected void solve() throws IOException {
         IntArraySorter.sort(a);
         int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();
         pw.println(res);
+    }
+    
+    static public void main(String[] args) throws IOException {
+        new p001417A().run();
     }
 }

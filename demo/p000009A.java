@@ -12,23 +12,24 @@ public class p000009A extends Solver {
     int B;
 
     @Override
-    protected void readInputAndSolve() throws IOException {
+    protected void readInput() throws IOException {
         int[] YW = lineToIntArray();
 
         A = 7 - Math.max(YW[0], YW[1]);
         B = 6;
-        solve();
     }
 
-    static public void main(String[] args) throws IOException {
-
-        new p000009A().run();
-    }
-
-    private void solve() throws IOException {
+    @Override
+    protected void solve() throws IOException {
         int nod = Utility.GreatestCommonFactor(A, B);
         A /= nod;
         B /= nod;
         pw.println(A + "/" + B);
     }
+    
+    static public void main(String[] args) throws IOException {
+
+        new p000009A().run();
+    }
+
 }

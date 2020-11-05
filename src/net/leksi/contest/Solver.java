@@ -68,14 +68,17 @@ public abstract class Solver {
         if(!singleTest) {
             int t = lineToIntArray()[0];
             while(t-- > 0) {
-                readInputAndSolve();
+                readInput();
+                solve();
             }
         } else {
-            readInputAndSolve();
+            readInput();
+            solve();
         }
     }
     
-    abstract protected void readInputAndSolve() throws IOException;
+    abstract protected void readInput() throws IOException;
+    abstract protected void solve() throws IOException;
 
     protected int[] lineToIntArray() throws IOException {
         return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();

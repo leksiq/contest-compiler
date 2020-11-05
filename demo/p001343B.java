@@ -11,17 +11,13 @@ public class p001343B extends Solver {
         singleTest = false;
     }
     
-    static public void main(String[] args) throws IOException {
-        new p001343B().run();
+    @Override
+    protected void readInput() throws IOException {
+        n = lineToIntArray()[0];
     }
 
     @Override
-    protected void readInputAndSolve() throws IOException {
-        n = lineToIntArray()[0];
-        solve();
-    }
-
-    private void solve() throws IOException {
+    protected void solve() throws IOException {
         int[] res = new int[n];
         int n2 = n / 2;
         if((n2) % 2 == 0) {
@@ -34,5 +30,9 @@ public class p001343B extends Solver {
             res[n - 1] = n2 * (n2 + 1) - Arrays.stream(res, n2, n - 1).sum();
         }
         pw.println(res[0] == 0 ? "NO" : "YES\n" + intArrayToString(res));
+    }
+
+    static public void main(String[] args) throws IOException {
+        new p001343B().run();
     }
 }
