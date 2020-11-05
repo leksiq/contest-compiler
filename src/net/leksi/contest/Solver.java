@@ -41,6 +41,9 @@ public abstract class Solver {
     protected boolean preprocessDebug = false;
     protected boolean doNotPreprocess = false;
     
+    protected Scanner sc = null;
+    protected PrintWriter pw = null;
+    
     /*+Preprocess-DONOTCOPY*/
     private void Preprocess_DONOTCOPY() {
         if(!doNotPreprocess) {
@@ -58,28 +61,28 @@ public abstract class Solver {
         }
     }
     /*-Preprocess-DONOTCOPY*/
-    private void preProcess(final Scanner scanner, final PrintWriter pw) throws IOException {
+    private void process() throws IOException {
         /*+Preprocess-DONOTCOPY*/
         Preprocess_DONOTCOPY();
         /*-Preprocess-DONOTCOPY*/
         if(!singleTest) {
-            int t = scanner.nextInt();
+            int t = lineToIntArray()[0];
             while(t-- > 0) {
-                process(scanner, pw);
+                readInputAndSolve();
             }
         } else {
-            process(scanner, pw);
+            readInputAndSolve();
         }
     }
     
-    abstract public void process(final Scanner scanner, final PrintWriter pw) throws IOException;
+    abstract protected void readInputAndSolve() throws IOException;
 
-    protected int[] readIntArray(final Scanner scanner) throws IOException {
-        return Arrays.stream(scanner.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
+    protected int[] lineToIntArray() throws IOException {
+        return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
     }
 
-    protected long[] readLongArray(final Scanner scanner) throws IOException {
-        return Arrays.stream(scanner.nextLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
+    protected long[] lineToLongArray() throws IOException {
+        return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
     }
     
     protected String intArrayToString(final int[] a) {
@@ -102,19 +105,23 @@ public abstract class Solver {
         return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
-    public void run() throws IOException {
+    protected void run() throws IOException {
         try {
             try (
                 FileInputStream fis = new FileInputStream(nameIn);
-                PrintWriter pw = select_output();
+                PrintWriter pw0 = select_output();
             ) {
-                preProcess(new Scanner(fis), pw);
+                sc = new Scanner(fis);
+                pw = pw0;
+                process();
             }
-        } catch(Exception ex) {
+        } catch(IOException ex) {
             try (
-                PrintWriter pw = select_output();
+                PrintWriter pw0 = select_output();
             ) {
-                preProcess(new Scanner(System.in), pw);
+                sc = new Scanner(System.in);
+                pw = pw0;
+                process();
             }
         }
     }
