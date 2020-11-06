@@ -88,6 +88,8 @@ class Preprocessor {
     public void run(final String arg) {
 //        System.out.println(arg);
 
+        
+
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
                 getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(File.pathSeparator));
         if(debug) { System.out.println("classpath: " + classPath); }
