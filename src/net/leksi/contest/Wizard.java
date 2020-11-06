@@ -28,6 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -42,15 +43,17 @@ public class Wizard {
     static public void main(final String[] args) throws IOException {
         new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
+//        new Wizard().run(new String[]{"-stdout", "A", "(5;im[5])"});
     }
 
     private static void usage() {
         System.out.println("Usage: java java_options " + Wizard.class.getCanonicalName() + " wizard_options class-name script");
         System.out.println("    java_options:           java options like -classpath;");
         System.out.println("    wizard_options:");
+        System.out.println("        -stdout             - write to stdout (default creates file <class-name>.java);");
         System.out.println("        -src directory      - the directory to generate sources into (default .);");
         System.out.println("        -package package    - the package of class to generate (default empty);");
-        System.out.println("        -force    - the package of class to generate (default empty);");
+        System.out.println("        -force              - overwrite existing file (default throws exception);");
         System.out.println("    class-name:             name of class to generate;");
         System.out.println("    script:                 input script;");
     }
@@ -70,12 +73,12 @@ public class Wizard {
     static class Cycle implements IVariable {
         String count;
         ArrayList<IVariable> variables = new ArrayList<>();
-        StringBuilder sb_class = new StringBuilder();
+        StringBuilder sb_class;
         String base;
         Cycle parent = null;
         String class_name;
         int field_gen = 0;
-        boolean simple = false;
+        Variable simple = null;
         @Override
         public String toString() {
             return String.format("{C:%s;[%s]}", 
@@ -95,6 +98,8 @@ public class Wizard {
         String src = ".";
         String class_name = null;
         String script = null;
+        boolean stdout = false;
+        boolean force = false;
         
         for(int i = 0 ; i < args.length; i++) {
             if(args[i].startsWith("-")) {
@@ -104,6 +109,10 @@ public class Wizard {
                 } else if("-package".equals(args[i])) {
                     i++;
                     pkg = args[i];
+                } else if("-stdout".equals(args[i])) {
+                    stdout = true;
+                } else if("-force".equals(args[i])) {
+                    force = true;
                 }
             } else if(class_name == null) {
                 class_name = args[i];
@@ -124,6 +133,7 @@ public class Wizard {
         
         
         last_cycle = new Cycle();
+        last_cycle.sb_class = new StringBuilder();
         cycles.push(last_cycle);
         last_cycle.count = "";
         all_cycles.add(last_cycle);
@@ -216,10 +226,16 @@ public class Wizard {
                         var = new Variable();
                         cycles.peek().variables.add(var);
                         last_cycle = cycles.peek();
+                        if("".equals(name)) {
+                            throw new RuntimeException("Unexpected char: '" + c + "', variable expected\n    \"" + script + "\"\n      " + String.format("%" + (i == 0 ? "" : i) + "s", "^"));
+                        }
                         var.name = name;
                         var.type = type;
                         wait_for_var = false;
                     } else if(";".equals(wf)) {
+                        if("".equals(name)) {
+                            throw new RuntimeException("Unexpected char: '" + c + "', variable or number expected\n    \"" + script + "\"\n      " + String.format("%" + (i == 0 ? "" : i) + "s", "^"));
+                        }
                         cycles.peek().count = name;
                     } else if("]".equals(wf)) {
                         var.length = name;
@@ -297,9 +313,30 @@ public class Wizard {
             return "";
         };
         
+        BiFunction<Cycle, Variable, String> find_variable = (cy, vv) -> {
+            try {
+                int len = Integer.valueOf(vv.length);
+                return Integer.toString(len);
+            } catch(NumberFormatException e) {
+                Variable res = null;
+                Cycle cyc = cy;
+                while(true) {
+                    res = (Variable)cy.variables.stream().filter(v -> v instanceof Variable && vv.length.equals(((Variable)v).name)).findFirst().orElse(null);
+                    if(res != null) {
+                        break;
+                    }
+                    cy = cy.parent;
+                    if(cy == null) {
+                        break;
+                    }
+                }
+                return res != null ? (cy.base != null ? cy.base + "." : "") + res.name : "";
+            }
+        };
+        
         reenter.process = (cycle) -> {
             String[] indent1 = new String[]{"    "};
-            if(cycle.parent != null && !cycle.simple) {
+            if(cycle.parent != null && cycle.simple == null) {
                 cycle.sb_class.append("    static class ").append(cycle.class_name).append(" {\n");
                 indent1[0] += indent1[0];
             }
@@ -315,31 +352,37 @@ public class Wizard {
                         if(vv.type.endsWith("[")) {
                             type1 += "[]";
                         }
-                        if(!cycle.simple) {
+                        if(cycle.simple == null) {
                             cycle.sb_class.append(indent1[0]).append(type1).append(" ").append(vv.name).append(";\n");
                         }
                         
-                        sb2.append(indent.get());
-                        if(cycle.base != null) {
-                            sb2.append(cycle.base).append(".");
-                        }
-                        sb2.append(vv.name);
-                        if(vv.length != null) {
-                            if(!"".equals(vv.length)) {
-                                sb2.append(" = new ").append(type1).append("[");
-                                String count;
-                                try {
-                                    int len = Integer.valueOf(vv.length);
-                                    count = Integer.toString(len);
-                                } catch(NumberFormatException e) {
-                                    count =  cycle.base + "." + vv.length;
+                        if(cycle.simple == null || vv.length == null || "".equals(vv.length)) {
+                            sb2.append(indent.get());
+                            if(cycle.base != null) {
+                                sb2.append(cycle.base);
+                                if(cycle.simple == null) {
+                                    sb2.append(".");
                                 }
-                                sb2.append(count).append("]").append(";\n");
+                            }
+                            if(cycle.simple == null) {
+                                sb2.append(vv.name);
+                            }
+                        }
+                        if(vv.length != null) {
+                            String count =  find_variable.apply(cycle, vv);
+                            if(!"".equals(vv.length)) {
+                                if(cycle.simple == null || vv.length == null && "".equals(vv.length)) {
+                                    sb2.append(" = new ").append(type1).append("[");
+                                    sb2.append(count).append("]").append(";\n");
+                                }
                                 sb2.append(indent.get()).append("for(int ").append("_i_").append(vv.name).append(" = 0; _i_").
                                         append(vv.name).append(" < ").append(count).append("; _i_").append(vv.name).append("++) {\n");
                                 indention[0]++;
-                                sb2.append(indent.get()).append(cycle.base).append(".").append(vv.name).
-                                        append("[").append("_i_").append(vv.name).append("] = next").
+                                sb2.append(indent.get()).append(cycle.base);
+                                if(cycle.simple == null) {
+                                    sb2.append(".").append(vv.name);
+                                }
+                                sb2.append("[").append("_i_").append(vv.name).append("] = sc.next").
                                         append(next).append("();\n");
                                 indention[0]--;
                                 sb2.append(indent.get()).append("}\n");
@@ -374,39 +417,40 @@ public class Wizard {
                     Cycle cy = (Cycle)v;
                     String field_name;
                     if(!cy.variables.stream().anyMatch(v1 -> (v1 instanceof Cycle)) && cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).count() <= 1) {
-                        Variable v2 = (Variable)cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).findFirst().get();
-                        field_name = v2.name;
-                        cy.class_name = type2.apply(v2.type);
-                        if(v2.length != null) {
-                            cy.class_name += "[]";
-                        }
-                        cy.base = cycle.base;
-                        cy.simple = true;
+                        cy.simple = (Variable)cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).findFirst().get();
+                        field_name = cy.simple.name;
+                        cy.class_name = type2.apply(cy.simple.type);
+//                        cy.base = cycle.base;
                     } else {
                         field_name = "_f" + (cycle.field_gen++);
                         cy.class_name = "Cy" + class_gen[0]++;
-                        cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
+                        cy.sb_class = new StringBuilder();
                     }
+                    cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
                     sb2.append(indent.get());
                     if (cycle.base != null) {
                         sb2.append(cycle.base).append(".");
                     }
-                    sb2.append(field_name).append(" = new ").append(cy.class_name.replace("[]", "")).append("[").append(cy.count).append("]");
-                    if(cy.class_name.endsWith("[]")) {
-                        sb2.append("[]");
+                    sb2.append(field_name).append(" = new ").append(cy.class_name).append("[").append(cy.count).append("]");
+                    if(cy.simple != null && cy.simple.length != null) {
+                        sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
                     }
                     sb2.append(";\n");
                     sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; _i").
                             append(field_name).append(" < ").append(cy.count).append("; _i").append(field_name).append("++) {\n");
-                    if(!cy.simple) {
+                    if(cy.simple == null) {
                         sb2.append(indent.get()).append("    ").append(field_name).append("[_i").append(field_name).append("").append("] = new ").append(cy.class_name).append("();\n");
                     }
                     reenter.process.accept(cy);
                     sb2.append(indent.get()).append("}\n");
-                    cycle.sb_class.append(indent1[0]).append(cy.class_name).append("[] ").append(field_name).append(";\n");
+                    cycle.sb_class.append(indent1[0]).append(cy.class_name);
+                    if(cy.simple != null && cy.simple.length != null) {
+                        cycle.sb_class.append("[]");
+                    }
+                    cycle.sb_class.append("[] ").append(field_name).append(";\n");
                 }
             });
-            if(cycle.parent != null && !cycle.simple) {
+            if(cycle.parent != null && cycle.simple == null) {
                 cycle.sb_class.append("    ").append("}\n");
             }
             indention[0]--;
@@ -427,7 +471,7 @@ public class Wizard {
         sb1.append("\n");
         sb1.append("    }\n");
 
-        sb1.append(all_cycles.stream().skip(1).map(cy -> cy.sb_class).collect(Collectors.joining()));
+        sb1.append(all_cycles.stream().skip(1).filter(cy -> cy.simple == null).map(cy -> cy.sb_class).collect(Collectors.joining()));
         sb1.append(sb2);
         sb1.append("    }\n");
         sb1.append("    static public void main(String[] args) throws IOException {\n");
@@ -435,22 +479,29 @@ public class Wizard {
         sb1.append("    }\n");
         sb1.append("}\n");
         sb1.insert(0, sb0);
-        File src_file = new File(src);
-        if(pkg != null) {
-            for(String part: pkg.split("\\.")) {
-                src_file = new File(src_file, part);
+        if(!stdout) {
+            File src_file = new File(src);
+            if(pkg != null) {
+                for(String part: pkg.split("\\.")) {
+                    src_file = new File(src_file, part);
+                }
             }
-        }
-//        System.out.println(src_file);
-        if(!src_file.exists()) {
-            src_file.mkdirs();
-        }
-        src_file = new File(src_file, class_name + ".java");
-        
-        try (
-                FileWriter fw = new FileWriter(src_file);
-            ) {
-            fw.write(sb1.toString());
+    //        System.out.println(src_file);
+            if(!src_file.exists()) {
+                src_file.mkdirs();
+            }
+            src_file = new File(src_file, class_name + ".java");
+            if(!force && src_file.exists()) {
+                throw new IOException("File exists: " + src_file);
+            }
+
+            try (
+                    FileWriter fw = new FileWriter(src_file);
+                ) {
+                fw.write(sb1.toString());
+            }
+        } else {
+            System.out.println(sb1);
         }
     }
 }
