@@ -89,11 +89,11 @@ class Preprocessor {
 //        System.out.println(arg);
 
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
-                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(";"));
+                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(File.pathSeparator));
         if(debug) { System.out.println("classpath: " + classPath); }
         
         String[] params = new String[6];
-        params[0] = "javap.exe";
+        params[0] = "javap";
         params[1] = "-c";
         params[2] = "-p";
         params[3] = "-classpath";
@@ -151,7 +151,7 @@ class Preprocessor {
         Function<File, JavaSource> getSourceFileEntry = (filename) -> {
             if(debug) { System.out.println(INDENTION + "searching " + filename); }
             JavaSource res = new JavaSource();
-            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(";"))).allMatch(path -> {
+            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(File.pathSeparator))).allMatch(path -> {
                 File fPath = new File(path);
                 if(debug) { System.out.println(INDENTION + "probe " + fPath); }
                 if(fPath.isDirectory()) {
@@ -196,12 +196,15 @@ class Preprocessor {
                 if(debug) { System.out.println("Decompile: " + params[5]); }
                 queue.remove(0);
                 final Process p = Runtime.getRuntime().exec(params);
+                StringBuilder sb_error = new StringBuilder();
+
                 Thread thread = new Thread() {
                     public void run() {
                         String line;
 
                         try(
                             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                            BufferedReader err = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                                 ) {
                             boolean skip = false;
                             String source = null;
@@ -448,6 +451,10 @@ class Preprocessor {
                                     }
                                 }
                             }
+                            while ((line = err.readLine()) != null) {
+                                line = line.trim();
+                                sb_error.append(line).append("\n");
+                            }
                             if(debug) { System.out.println(INDENTION + "found: " + foundClasses); }
                             foundClasses.forEach(v -> {
                                 try {
@@ -483,6 +490,7 @@ class Preprocessor {
                 thread.join();
                 if (result != 0 || failed[0]) {
                     System.err.println("Process failed with status: " + result);
+                    System.err.println(sb_error);
                     break;
                 }
                 first[0] = false;
