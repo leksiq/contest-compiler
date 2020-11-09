@@ -1,11 +1,48 @@
 # contest-compiler
-Compiles single Java source file from multiple source files for "Online Judges".
+The library is intended to simplify some routines one faces using Java for "Online Judges" contests.
++ Quick coding input data structure and read it;
++ Using one's favorite algorithms without copying sources into your submission manually.
 ## Preface
-This library would be useful for you if you like to solve programming problems, take part in online programming contests and use Java for these purposes. If you have your favorite homemade classes implementing various algorithms you have to copy-paste them into the source file to submit into "Online Judges" system as it acceps single file. Besides, this library simplifies input-output routines that permits to concentrate on the problem itself.
-## API
-The frontend is an abstract class named Solver. You should extend it overriding an abstract method
+This library would be useful for one who likes to solve programming problems, take part in online programming contests and use Java for these purposes. First, one needs everytime coding the same routines to read input data. Second, If one have one's favorite homemade classes implementing various algorithms one has to copy-paste them into the source file to submit into "Online Judges" system as it acceps single file. Thus, this library helps to concentrate on the problem itself.
+## Input Data reading support
+Running class `net.leksi.contest.Wizard` one gets a "stub" with all input data structure is coded and ready to be read without (almost) any actions. The usage of the `net.leksi.contest.Wizard`:
 
-    abstract public void process(final BufferedReader br, final PrintWriter pw) throws IOException;
+    Usage: java java_options net.leksi.contest.Wizard wizard_options class-name script
+        java_options:           java options like -classpath;
+        wizard_options:
+            -stdout             - write to stdout (default creates file <class-name>.java);
+            -src directory      - the directory to generate sources into (default .);
+            -package package    - the package of class to generate (default empty);
+            -force              - overwrite existing file (default throws exception);
+        class-name:             name of class to generate;
+        script:                 input script;
+    
+The "input script" means the script on lightweight special language. This script follows the task input description.
+### The Script Language Grammar in Backus–Naur form
+
+    script                      ::=     '*'? input-of-test
+    input-of-test               ::=     input-of-cycle
+    input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
+    cycle                       ::=     '(' variable-name | number ';' input-of-cycle ')'
+    variables-group             ::=     same-type-variables-group (';' same-type-variables-group | new-line)*
+    variable-name               ::=     <Java's  legal identifier>
+    same-type-variables-group   ::=     type variable-definition (',' variable-definition)
+    new-line                    ::=     '/'
+    type                        ::=     'i' | 'l' | 'd' | 's'
+    variable-definition         ::=     variable-name ('[' array-length? ']')?
+    array-length                ::=     variable-name | number
+    
+`'*'` at the beginning of script means that there are multiple test at one submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there only test at submission run.
+`new-line` literal means an expected end of line of input.
+`type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'` stand for `int`, `long`, `double` and `java.lang.String` respectively.
+if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
+`java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes chars split with spaces
+
+## API
+The frontend is an abstract class  `net.leksi.contest.Solver`. One should extend it overriding two abstract methods
+
+    abstract public void readInput() throws IOException;
+    abstract public void solve() throws IOException;
     
 and optionally reassigning protected fields
 
@@ -22,31 +59,11 @@ Let's regard the fields first.
 4. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
 5. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
 
-The `process` method supplies you with `BufferedReader br` and `PrintWriter pw` arguments for reading from input and writing to output respectively. Thus, you may use the following template in most cases:
-
-    //necessary imports are here
-    import net.leksi.contest.Solver;
-    
-    public class MyDecision {
-        public static void main(String[] ags) throws IOException {
-            new Solver() {{{ nameIn = "some_input_file_name"; singleTest = true;}}
-                @Override
-                public void process(BufferedReader br, PrintWriter pw) throws IOException {
-                
-                    /* your creative code here */
-                    
-                }
-            }.run();
-        }
-    }
-
 There are some methods to simplify routine actions:
 
-    protected int[] readIntArray(final BufferedReader br) throws IOException;
+    protected int[] lineToIntArray() throws IOException;
 
-    protected long[] readLongArray(final BufferedReader br) throws IOException;
-    
-    protected String readString(final BufferedReader br) throws IOException;
+    protected long[] lineToLongArray() throws IOException;
     
     protected String intArrayToString(final int[] a);
 
@@ -58,14 +75,20 @@ There are some methods to simplify routine actions:
     
     protected List<Long> intArrayToLongList(final int[] a);
     
-1. `readIntArray` splits input line delimited with spaces into `int[]`.
-1. `readLongArray` splits input line delimited with spaces into `long[]`.
-1. `readString` reads whole input line. 
+1. `lineToIntArray` parses rest of input line as `int[]` delimited with spaces.
+1. `lineToLongArray` parses rest of input line as `long[]` delimited with spaces.
 1. `intArrayToString` joins `int[]` into `String` delimited with spaces.
 1. `longArrayToString` joins `long[]` into `String` delimited with spaces.
 1. `longArrayToList` creates  `List<Long>` from `long[]`.
 1. `intArrayToList` creates  `List<Integer>` from `int[]`.
 1. `intArrayToLongList` creates  `List<Long>` from `int[]`.
+
+Also there are predefined protected fields for reading input and writing to output:
+
+    protected Scanner sc;
+    protected PrintWriter pw;
+    
+both are supplied in base class in dependence of `nameIn` and `nameOut` fields
 
 ### Demo
 
