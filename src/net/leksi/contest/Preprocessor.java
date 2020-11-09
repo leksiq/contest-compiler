@@ -585,7 +585,7 @@ class Preprocessor {
             sb1.append("public class _").append(main_class).append(" {\n");
             sb1.append("    static public void main(final String[] args) ");
             if(!main_exceptions.isEmpty()) {
-                sb1.append("throws ").append(main_exceptions.stream().map(v -> v).collect(Collectors.joining(", ")));
+                sb1.append("throws ").append(main_exceptions.stream().map(v -> v.substring(v.lastIndexOf(".") + 1)).collect(Collectors.joining(", ")));
             }
             sb1.append(" {\n");
             sb1.append("        ").append(main_class).append(".").append(underline).append("main(args);\n");

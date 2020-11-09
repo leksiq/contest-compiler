@@ -375,15 +375,21 @@ public class Wizard {
                             String count =  find_variable.apply(cycle, vv);
                             if(!"".equals(vv.length)) {
                                 if(cycle.simple == null || vv.length == null && "".equals(vv.length)) {
-                                    sb2.append(" = new ").append(type1).append("[");
+                                    sb2.append(" = new ").append(type1.replace("[]", "")).append("[");
                                     sb2.append(count).append("]").append(";\n");
                                 }
                                 sb2.append(indent.get()).append("for(int ").append("_i_").append(vv.name).append(" = 0; _i_").
                                         append(vv.name).append(" < ").append(count).append("; _i_").append(vv.name).append("++) {\n");
                                 indention[0]++;
-                                sb2.append(indent.get()).append(cycle.base);
-                                if(cycle.simple == null) {
-                                    sb2.append(".").append(vv.name);
+                                sb2.append(indent.get());
+                                if (cycle.base != null) {
+                                    sb2.append(cycle.base);
+                                    if (cycle.simple == null) {
+                                        sb2.append(".");
+                                    }
+                                }
+                                if (cycle.simple == null) {
+                                    sb2.append(vv.name);
                                 }
                                 sb2.append("[").append("_i_").append(vv.name).append("] = sc.next").
                                         append(next).append("();\n");
