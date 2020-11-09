@@ -6,19 +6,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-public class _p001417A {
+public class _p001284A {
     static public void main(final String[] args) throws java.io.IOException {
-        p001417A._main(args);
+        p001284A._main(args);
     }
-//begin p001417A.java
-static private class p001417A extends Solver{public p001417A(){nameIn="demo/p001417A.in"
-;singleTest=false;}int n;int k;int[]a;@Override protected void solve(){IntArraySorter
-.sort(a);int res=Arrays.stream(a,1,n).map(v->(k-v)/a[0]).sum();pw.println(res);}
-@Override public void readInput()throws IOException{n=sc.nextInt();k=sc.nextInt(
-);sc.nextLine();a=Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer
-::valueOf).toArray();}static public void _main(String[]args)throws IOException{new
-p001417A().run();}}
-//end p001417A.java
+//begin p001284A.java
+static private class p001284A extends Solver{public p001284A(){nameIn="demo/p001284A.in"
+;singleTest=true;}int n;int m;String[]s;String[]t;int q;int[]y;@Override protected
+void solve(){for(int i=0;i<q;i++){String st=s[(y[i]-1)% n]+t[(y[i]-1)% m];pw.println
+(st);}}@Override public void readInput()throws IOException{n=sc.nextInt();m=sc.nextInt
+();sc.nextLine();s=sc.nextLine().trim().split("\\s+");t=sc.nextLine().trim().split
+("\\s+");q=sc.nextInt();sc.nextLine();y=new int[q];for(int _iy=0;_iy<q;_iy++){y[_iy
+]=sc.nextInt();sc.nextLine();}}static public void _main(String[]args)throws IOException
+{new p001284A().run();}}
+//end p001284A.java
 //begin net/leksi/contest/Solver.java
 static private abstract class Solver{protected String nameIn=null;protected String
 nameOut=null;protected boolean singleTest=false;protected boolean preprocessDebug
@@ -44,8 +45,4 @@ pw0=select_output();){sc=new Scanner(System.in);pw=pw0;process();}}}private Prin
 select_output()throws FileNotFoundException{if(nameOut !=null){return new PrintWriter
 (nameOut);}return new PrintWriter(System.out);}}
 //end net/leksi/contest/Solver.java
-//begin net/leksi/contest/demo/IntArraySorter.java
-static private class IntArraySorter{public static void sort(int[]arr){Arrays.sort
-(arr);}}
-//end net/leksi/contest/demo/IntArraySorter.java
 }

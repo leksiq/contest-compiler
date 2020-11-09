@@ -13,12 +13,12 @@ public class _p000009A {
         p000009A._main(args);
     }
 //begin p000009A.java
-static private class p000009A extends Solver{p000009A(){nameIn="demo/p000009A.in"
-;singleTest=true;}int A;int B;@Override protected void readInput()throws IOException
-{int[]YW=lineToIntArray();A=7-Math.max(YW[0],YW[1]);B=6;}@Override protected void
-solve()throws IOException{int nod=Utility.GreatestCommonFactor(A,B);A/=nod;B/=nod
-;pw.println(A+"/"+B);}static public void _main(String[]args)throws IOException{new
-p000009A().run();}}
+static private class p000009A extends Solver{public p000009A(){nameIn="demo/p000009A.in"
+;singleTest=true;}int Y;int W;@Override protected void solve(){int A=7-Math.max(Y
+,W);int B=6;int nod=Utility.GreatestCommonFactor(A,B);A/=nod;B/=nod;pw.println(A
++"/"+B);}@Override public void readInput()throws IOException{Y=sc.nextInt();W=sc
+.nextInt();sc.nextLine();}static public void _main(String[]args)throws IOException
+{new p000009A().run();}}
 //end p000009A.java
 //begin net/leksi/cf/Utility.java
 static private class Utility{public static void countSort(final int[]src,final int

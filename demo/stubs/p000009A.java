@@ -1,9 +1,8 @@
 import java.io.IOException;
-import net.leksi.cf.Utility;
 import net.leksi.contest.Solver;
 public class p000009A extends Solver {
     public p000009A() {
-        nameIn = "demo/p000009A.in"; singleTest = true;
+        nameIn = "p000009A.in"; singleTest = true;
     }
     /*
      * Generated from "iY,W".
@@ -15,17 +14,7 @@ public class p000009A extends Solver {
         /*
          * Write your code below.
          */
-        /*
-         *      The task: 
-         *
-         *      https://codeforces.com/problemset/problem/9/A
-         */
-        int A = 7 - Math.max(Y, W);
-        int B = 6;
-        int nod = Utility.GreatestCommonFactor(A, B);
-        A /= nod;
-        B /= nod;
-        pw.println(A + "/" + B);
+
     }
     @Override
     public void readInput() throws IOException {

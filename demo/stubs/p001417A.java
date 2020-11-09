@@ -1,13 +1,12 @@
 import java.io.IOException;
 import net.leksi.contest.Solver;
 import java.util.Arrays;
-import net.leksi.contest.demo.IntArraySorter;
 public class p001417A extends Solver {
     public p001417A() {
-        nameIn = "demo/p001417A.in"; singleTest = false;
+        nameIn = "p001417A.in"; singleTest = false;
     }
     /*
-     * Generated from "*in,k/ia[]".
+     * Generated from "*in,k/ia[]". 
      */
     int n;
     int k;
@@ -17,14 +16,7 @@ public class p001417A extends Solver {
         /*
          * Write your code below.
          */
-        /*
-         *      The task: 
-         *
-         *      https://codeforces.com/problemset/problem/1417/A
-         */
-        IntArraySorter.sort(a);
-        int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();
-        pw.println(res);
+
     }
     @Override
     public void readInput() throws IOException {

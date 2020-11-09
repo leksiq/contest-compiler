@@ -28,6 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -92,6 +93,7 @@ public class Wizard {
     
     Stack<Cycle> cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
+    TreeSet<String> var_names = new TreeSet<>();
 
     private void run(String[] args) throws IOException {
         String pkg = null;
@@ -231,6 +233,7 @@ public class Wizard {
                         }
                         var.name = name;
                         var.type = type;
+                        var_names.add(name);
                         wait_for_var = false;
                     } else if(";".equals(wf)) {
                         if("".equals(name)) {
@@ -422,7 +425,9 @@ public class Wizard {
                         cy.class_name = type2.apply(cy.simple.type);
 //                        cy.base = cycle.base;
                     } else {
-                        field_name = "_f" + (cycle.field_gen++);
+                        do {
+                            field_name = "f" + (cycle.field_gen++);
+                        } while (!var_names.contains(field_name));
                         cy.class_name = "Cy" + class_gen[0]++;
                         cy.sb_class = new StringBuilder();
                     }
