@@ -4,4 +4,4 @@ Name: contest-compiler
 Specification-Vendor: Alexey Zakharov <leksi@leksi.net>
 Implementation-Name: contest-compiler
 Implementation-Vendor: Alexey Zakharov <leksi@leksi.net>
-Implementation-Version: 1.0.0
+Implementation-Version: v1.0.0
