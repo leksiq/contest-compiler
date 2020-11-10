@@ -88,17 +88,14 @@ class Preprocessor {
     public void run(final String arg) {
 //        System.out.println(arg);
 
-        if(debug) { System.out.println(System.getProperty("os.name")); }
         
-        int os = System.getProperty("os.name").contains("Linux") ? 1 : 0;
 
-        String cpDelim = os == 1 ? ":" : ";";
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
-                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(cpDelim));
+                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(File.pathSeparator));
         if(debug) { System.out.println("classpath: " + classPath); }
         
         String[] params = new String[6];
-        params[0] = os == 1 ? "javap":  "javap.exe";
+        params[0] = "javap";
         params[1] = "-c";
         params[2] = "-p";
         params[3] = "-classpath";
@@ -157,7 +154,7 @@ class Preprocessor {
         Function<File, JavaSource> getSourceFileEntry = (filename) -> {
             if(debug) { System.out.println(INDENTION + "searching " + filename); }
             JavaSource res = new JavaSource();
-            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(cpDelim))).allMatch(path -> {
+            Stream.concat(Stream.of("."), Arrays.stream(classPath.split(File.pathSeparator))).allMatch(path -> {
                 File fPath = new File(path);
                 if(debug) { System.out.println(INDENTION + "probe " + fPath); }
                 if(fPath.isDirectory()) {
@@ -202,13 +199,15 @@ class Preprocessor {
                 if(debug) { System.out.println("Decompile: " + params[5]); }
                 queue.remove(0);
                 final Process p = Runtime.getRuntime().exec(params);
+                StringBuilder sb_error = new StringBuilder();
+
                 Thread thread = new Thread() {
                     public void run() {
                         String line;
 
                         try(
                             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                            BufferedReader error = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                            BufferedReader err = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                                 ) {
                             boolean skip = false;
                             String source = null;
@@ -455,8 +454,9 @@ class Preprocessor {
                                     }
                                 }
                             }
-                            while ((line = error.readLine()) != null) {
-                                System.err.println(line);
+                            while ((line = err.readLine()) != null) {
+                                line = line.trim();
+                                sb_error.append(line).append("\n");
                             }
                             if(debug) { System.out.println(INDENTION + "found: " + foundClasses); }
                             foundClasses.forEach(v -> {
@@ -493,6 +493,7 @@ class Preprocessor {
                 thread.join();
                 if (result != 0 || failed[0]) {
                     System.err.println("Process failed with status: " + result);
+                    System.err.println(sb_error);
                     break;
                 }
                 first[0] = false;
@@ -585,7 +586,7 @@ class Preprocessor {
             sb1.append("public class _").append(main_class).append(" {\n");
             sb1.append("    static public void main(final String[] args) ");
             if(!main_exceptions.isEmpty()) {
-                sb1.append("throws ").append(main_exceptions.stream().map(v -> v).collect(Collectors.joining(", ")));
+                sb1.append("throws ").append(main_exceptions.stream().map(v -> v.substring(v.lastIndexOf(".") + 1)).collect(Collectors.joining(", ")));
             }
             sb1.append(" {\n");
             sb1.append("        ").append(main_class).append(".").append(underline).append("main(args);\n");

@@ -1,0 +1,7 @@
+Main-Class: net.leksi.contest.Wizard
+
+Name: contest-compiler
+Specification-Vendor: Alexey Zakharov <leksi@leksi.net>
+Implementation-Name: contest-compiler
+Implementation-Vendor: Alexey Zakharov <leksi@leksi.net>
+Implementation-Version: 1.0.0
