@@ -1,3 +1,8 @@
+/*
+ *      The task: 
+ *
+ *      https://codeforces.com/problemset/problem/1417/A
+ */
 import java.io.IOException;
 import net.leksi.contest.Solver;
 import java.util.Arrays;
@@ -16,11 +21,6 @@ public class p001417A extends Solver {
     protected void solve() {
         /*
          * Write your code below.
-         */
-        /*
-         *      The task: 
-         *
-         *      https://codeforces.com/problemset/problem/1417/A
          */
         IntArraySorter.sort(a);
         int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();

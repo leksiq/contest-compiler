@@ -1,3 +1,8 @@
+/*
+ *      The task: 
+ *
+ *      https://codeforces.com/problemset/problem/1284/A
+ */
 import java.io.IOException;
 import net.leksi.contest.Solver;
 public class p001284A extends Solver {
@@ -17,11 +22,6 @@ public class p001284A extends Solver {
     protected void solve() {
         /*
          * Write your code below.
-         */
-        /*
-         *      The task: 
-         *
-         *      https://codeforces.com/problemset/problem/1284/A
          */
         for (int i = 0; i < q; i++) {
             String st = s[(y[i] - 1) % n] + t[(y[i] - 1) % m];

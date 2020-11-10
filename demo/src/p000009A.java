@@ -1,5 +1,10 @@
+/*
+ *      The task: 
+ *
+ *      https://codeforces.com/problemset/problem/9/A
+ */
 import java.io.IOException;
-import net.leksi.cf.Utility;
+import net.leksi.contest.demo.Utility;
 import net.leksi.contest.Solver;
 public class p000009A extends Solver {
     public p000009A() {
@@ -14,11 +19,6 @@ public class p000009A extends Solver {
     protected void solve() {
         /*
          * Write your code below.
-         */
-        /*
-         *      The task: 
-         *
-         *      https://codeforces.com/problemset/problem/9/A
          */
         int A = 7 - Math.max(Y, W);
         int B = 6;

@@ -23,10 +23,20 @@
  */
 package net.leksi.contest.demo;
 
-import java.util.Arrays;
+public class Utility {
 
-public class IntArraySorter {
-    public static void sort(int[] arr) {
-        Arrays.sort(arr);
+    public static int GreatestCommonFactor(int a, int b) {
+        int max = Math.max(a, b);
+        int min = Math.min(a, b);
+        while(min > 1) {
+            int r = max % min;
+            if(r == 0) {
+                return min;
+            }
+            max = min;
+            min = r;
+        }
+        return 1;
     }
+    
 }

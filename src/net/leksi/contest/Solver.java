@@ -23,6 +23,7 @@
  */
 package net.leksi.contest;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,14 +41,11 @@ public abstract class Solver {
 
     protected boolean preprocessDebug = false;
     protected boolean doNotPreprocess = false;
-    protected long timeoutReadInputMS = 1000;
     
     protected Scanner sc = null;
     protected PrintWriter pw = null;
     
     /*+Preprocess-DONOTCOPY*/
-    
-    private boolean input_is_read = false;
     
     private void Preprocess_DONOTCOPY() {
         if(!doNotPreprocess) {
@@ -63,27 +61,8 @@ public abstract class Solver {
                 System.out.println("----- " + running + " output -----");
             }
         }
-        new Thread() {
-            public void run() {
-                synchronized(this) {
-                    try {
-                        wait(timeoutReadInputMS);
-                    } catch (InterruptedException ex) {}
-                    if(!input_is_read) {
-                        System.err.println("Timeout reading input. Interrupted.");
-                        Runtime.getRuntime().exit(1);
-                    }
-                }
-            }
-        }.run();
     }
     
-    private void Preprocess_DONOTCOPY_input_is_read() {
-        synchronized(this) {
-            input_is_read = true;
-            notify();
-        }
-    }
     /*-Preprocess-DONOTCOPY*/
     private void process() throws IOException {
         /*+Preprocess-DONOTCOPY*/
@@ -93,16 +72,10 @@ public abstract class Solver {
             int t = lineToIntArray()[0];
             while(t-- > 0) {
                 readInput();
-                /*+Preprocess-DONOTCOPY*/
-                Preprocess_DONOTCOPY_input_is_read();
-                /*-Preprocess-DONOTCOPY*/
                 solve();
             }
         } else {
             readInput();
-            /*+Preprocess-DONOTCOPY*/
-            Preprocess_DONOTCOPY_input_is_read();
-            /*-Preprocess-DONOTCOPY*/
             solve();
         }
     }
