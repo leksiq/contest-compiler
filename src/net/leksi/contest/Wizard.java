@@ -48,7 +48,7 @@ public class Wizard {
     }
 
     private static void usage() {
-        System.out.println("Usage: java java_options " + Wizard.class.getCanonicalName() + " wizard_options class-name script");
+        System.out.println("Usage: java java_options -jar net.leksi.contest.compiler.jar wizard_options class-name script");
         System.out.println("    java_options:           java options like -classpath;");
         System.out.println("    wizard_options:");
         System.out.println("        -stdout             - write to stdout (default creates file <class-name>.java);");
