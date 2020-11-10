@@ -51,10 +51,12 @@ public class Wizard {
         System.out.println("Usage: java java_options -jar net.leksi.contest.compiler.jar wizard_options class-name script");
         System.out.println("    java_options:           java options like -classpath;");
         System.out.println("    wizard_options:");
-        System.out.println("        -stdout             - write to stdout (default creates file <class-name>.java);");
-        System.out.println("        -src directory      - the directory to generate sources into (default .);");
-        System.out.println("        -package package    - the package of class to generate (default empty);");
-        System.out.println("        -force              - overwrite existing file (default throws exception);");
+        System.out.println("        -stdout                 - write to stdout (default creates file <class-name>.java);");
+        System.out.println("        -src <directory>        - the directory to generate source into (default .);");
+        System.out.println("        -in <directory>         - the directory to generate input file into (default .);");
+        System.out.println("        -create-in <name>|-     - generate input file <name> or default name;");
+        System.out.println("        -package package        - the package of class to generate (default empty);");
+        System.out.println("        -force                  - overwrite existing files (default throws exception);");
         System.out.println("    class-name:             name of class to generate;");
         System.out.println("    script:                 input script;");
     }
