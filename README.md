@@ -44,7 +44,7 @@ The "input script" means the script on lightweight special language. This script
 `new-line` literal means an expected end of line of input.
 `type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'` stand for `int`, `long`, `double` and `java.lang.String` respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
-`java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before.
+`java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. Space chars may present between any terms.
 
 ### The Script Language Examples
 #### Example 1
