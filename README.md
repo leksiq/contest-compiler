@@ -1,5 +1,5 @@
 # java-contest-assistant
-The library is intended to simplify some routines one faces using Java for "Online Judges" contests.
+The library is intended to simplify some routines when using Java for "Online Judges" contests.
 + Quick coding input data structure and read it;
 + Using one's favorite algorithms without copying sources into your submission manually.
 ## Preface
