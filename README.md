@@ -28,7 +28,7 @@ Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data s
 The "input script" means the script on lightweight special language. This script follows the task input description.
 ### The Script Language Grammar
 
-    script                      ::=     '*'? input-of-test
+    script                      ::=     ('*' | '?')? input-of-test
     input-of-test               ::=     input-of-cycle
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
     cycle                       ::=     '(' variable-name | number ';' input-of-cycle ')'
@@ -40,8 +40,8 @@ The "input script" means the script on lightweight special language. This script
     variable-definition         ::=     variable-name ('[' array-length? ']')?
     array-length                ::=     variable-name | number
     
-`'*'` at the beginning of script means that there are multiple test at one submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
-`new-line` literal means an expected end of line of input.
+`'*'` at the beginning of script means that there are multiple test at each submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
+`'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
 `type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'` stand for `int`, `long`, `double` and `java.lang.String` respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
 `java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. Space chars may present between any terms.
@@ -107,14 +107,21 @@ and optionally reassigning protected fields
     protected String nameIn = null;
     protected String nameOut = null;
     protected boolean singleTest = false;
+    protected boolean localMultiTest = false;
     protected boolean doNotPreprocess = false;
     protected boolean preprocessDebug = false;
 
 1. `nameIn` - name of input file if the problem requires file input or while testing. Otherwise leave it unchanged (default `null` means console input). If the input file is not found then console input is used, so you may test using file input and submit into "Online Judges" system with console input without changing.
 2. `nameOut` - name of output file if the problem requires file output or while testing, otherwise leave it unchanged (default `null` means console output). **Unlike the previous case you should set `null` if the problem requires console output**.
 3. `singleTest` - set `false` (or leave unchanged default `false`) if the problem will be run at multiple test cases. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `true`.
-4. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
-5. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
+4. `localMultiTest` - set `true` if the problem will be run under single test case at judge system, but multiple ones at a local testing. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `false`  (or leave unchanged default `false`). Note: use this field inside special construction: 
+````    
+        /*+Preprocess-DONOTCOPY*/
+        localMultiTest = true;
+        /*-Preprocess-DONOTCOPY*/
+````
+5. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
+6. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
 
 There are some methods to simplify routine actions:
 
