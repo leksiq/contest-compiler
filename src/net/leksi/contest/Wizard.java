@@ -53,10 +53,9 @@ public class Wizard {
         System.out.println("    wizard_options:");
         System.out.println("        -stdout                 - write to stdout (default creates file <class-name>.java);");
         System.out.println("        -src <directory>        - the directory to generate source into (default .);");
-        System.out.println("        -in <directory>         - the directory to generate input file into (default .);");
-        System.out.println("        -create-in <name>|-     - generate input file <name> or default name;");
+        System.out.println("        -in <name>              - generate input file <name> (default <class-name>.in);");
         System.out.println("        -package package        - the package of class to generate (default empty);");
-        System.out.println("        -force                  - overwrite existing files (default throws exception);");
+        System.out.println("        -force                  - overwrite existing files (default throws exception for source file and leaves input file);");
         System.out.println("    class-name:             name of class to generate;");
         System.out.println("    script:                 input script;");
     }
@@ -99,7 +98,8 @@ public class Wizard {
 
     private void run(String[] args) throws IOException {
         String pkg = null;
-        String src = ".";
+        String src = null;
+        String in_name = null;
         String class_name = null;
         String script = null;
         boolean stdout = false;
@@ -113,6 +113,9 @@ public class Wizard {
                 } else if("-package".equals(args[i])) {
                     i++;
                     pkg = args[i];
+                } else if("-in".equals(args[i])) {
+                    i++;
+                    in_name = args[i];
                 } else if("-stdout".equals(args[i])) {
                     stdout = true;
                 } else if("-force".equals(args[i])) {
@@ -132,6 +135,23 @@ public class Wizard {
             return;
         }
         
+        if(stdout) {
+            if(force) {
+                System.out.println("Warning: -stdout applied, -force ignored.");
+            }
+            if(in_name != null) {
+                in_name = null;
+                System.out.println("Warning: -stdout applied, -in ignored.");
+            }
+        } else {
+            if(src == null) {
+                src = ".";
+            }
+            if(in_name == null) {
+                in_name = class_name + ".in";
+            }
+        }
+        
         Variable var = null;
         Cycle last_cycle = null;
         
@@ -144,9 +164,14 @@ public class Wizard {
         
         
         boolean[] singleTest = new boolean[]{true};
+        boolean[] localMultiTest = new boolean[]{false};
         int i = 0;
         if(script.charAt(0) == '*') {
             singleTest[0] = false;
+            i++;
+        } else if(script.charAt(0) == '?') {
+            singleTest[0] = true;
+            localMultiTest[0] = true;
             i++;
         }
         
@@ -281,7 +306,15 @@ public class Wizard {
         StringBuilder sb2 = new StringBuilder();
         sb1.append("public class ").append(class_name).append(" extends Solver {\n");
         sb1.append("    public ").append(class_name).append("() {\n");
-        sb1.append("        nameIn = \"").append(class_name).append(".in\"; singleTest = ").append(singleTest[0]).append(";\n");
+        sb1.append("        nameIn = \"").append(in_name).append("\";\n");
+        if(singleTest[0]) {
+            sb1.append("        singleTest = ").append(singleTest[0]).append(";\n");
+        }
+        if(localMultiTest[0]) {
+            sb1.append("        /*+Preprocess-DONOTCOPY*/\n").
+                    append("        localMultiTest = true;\n").
+                    append("        /*-Preprocess-DONOTCOPY*/\n");
+        }
         sb1.append("    }\n");
         sb2.append("    @Override\n");
         sb2.append("    public void readInput() throws IOException {\n");
@@ -420,7 +453,9 @@ public class Wizard {
                         }
                     } else {
                         if(!line_read[0]) {
-                            sb2.append(indent.get()).append("sc.nextLine();\n");
+                            sb2.append(indent.get()).append("if(sc.hasNextLine()) {\n");
+                            sb2.append(indent.get()).append("    sc.nextLine();\n");
+                            sb2.append(indent.get()).append("}\n");
                         }
                         line_read[0] = false;
                     }
@@ -509,9 +544,18 @@ public class Wizard {
             }
 
             try (
-                    FileWriter fw = new FileWriter(src_file);
-                ) {
+                FileWriter fw = new FileWriter(src_file);
+            ) {
                 fw.write(sb1.toString());
+            }
+            
+            File in_file = new File(in_name);
+            if(force || !in_file.exists()) {
+                try (
+                    FileWriter fw = new FileWriter(in_file);
+                ) {
+                    fw.write("");
+                }
             }
         } else {
             System.out.println(sb1);

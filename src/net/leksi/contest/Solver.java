@@ -46,6 +46,8 @@ public abstract class Solver {
     
     /*+Preprocess-DONOTCOPY*/
     
+    protected boolean localMultiTest = false;
+    
     private void Preprocess_DONOTCOPY() {
         if(!doNotPreprocess) {
             String running = getClass().getName();
@@ -59,6 +61,9 @@ public abstract class Solver {
             if(preprocessDebug) {
                 System.out.println("----- " + running + " output -----");
             }
+        }
+        if(localMultiTest) {
+            singleTest = false;
         }
     }
     
