@@ -1,7 +1,7 @@
 Main-Class: net.leksi.contest.Wizard
 
-Name: contest-compiler
+Name: java-contest-assistant
 Specification-Vendor: Alexey Zakharov <leksi@leksi.net>
-Implementation-Name: contest-compiler
+Implementation-Name: java-contest-assistant
 Implementation-Vendor: Alexey Zakharov <leksi@leksi.net>
-Implementation-Version: v1.0.0
+Implementation-Version: v1.1.0

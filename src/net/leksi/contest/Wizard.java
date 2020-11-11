@@ -42,9 +42,9 @@ import java.util.stream.Collectors;
 public class Wizard {
     
     static public void main(final String[] args) throws IOException {
-        new Wizard().run(args);
+//        new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
-//        new Wizard().run(new String[]{"-stdout", "A", "(5;im[5])"});
+        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/(m;il,r,x/)"});
     }
 
     private static void usage() {
@@ -288,7 +288,7 @@ public class Wizard {
             var.type = "/";
             last_cycle.variables.add(var);
         }
-//        System.out.println(cycles);
+        System.out.println(cycles);
         
         class Reenter {
             Consumer<Cycle> process;
@@ -470,7 +470,7 @@ public class Wizard {
                     } else {
                         do {
                             field_name = "f" + (cycle.field_gen++);
-                        } while (!var_names.contains(field_name));
+                        } while (var_names.contains(field_name));
                         cy.class_name = "Cy" + class_gen[0]++;
                         cy.sb_class = new StringBuilder();
                     }
@@ -550,7 +550,7 @@ public class Wizard {
             }
             
             File in_file = new File(in_name);
-            if(force || !in_file.exists()) {
+            if(!in_file.exists()) {
                 try (
                     FileWriter fw = new FileWriter(in_file);
                 ) {
