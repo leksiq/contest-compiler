@@ -42,9 +42,9 @@ import java.util.stream.Collectors;
 public class Wizard {
     
     static public void main(final String[] args) throws IOException {
-//        new Wizard().run(args);
+        new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
-        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/(m;il,r,x/)"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/(m;il,r,x/)"});
     }
 
     private static void usage() {
