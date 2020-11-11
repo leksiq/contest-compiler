@@ -288,7 +288,7 @@ public class Wizard {
             var.type = "/";
             last_cycle.variables.add(var);
         }
-        System.out.println(cycles);
+//        System.out.println(cycles);
         
         class Reenter {
             Consumer<Cycle> process;
