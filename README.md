@@ -43,9 +43,12 @@ The "input script" means the script on lightweight special language. This script
     array-length                ::=     variable-name | number
     
 `'*'` at the beginning of script means that there are multiple test at each submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
+
 `'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
+
 `type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'` stand for `int`, `long`, `double` and `java.lang.String` respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
+
 `java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. Space chars may present between any terms.
 
 ### The Script Language Examples
@@ -228,7 +231,7 @@ public class p001417A extends Solver {
     }
 }
 ````
-3. Compile `javac -classpath net.leksi.contest.assistant.jar demo/src/p001417A.java` then run `java -classpath net.leksi.contest.assistant.jar;demo/src p001417A` and get: 
+3. Compile `javac -classpath net.leksi.contest.assistant.jar demo/src/p001417A.java` then run `java -classpath net.leksi.contest.assistant.jar;demo/src p001417A` and get production `_p001417A.java`: 
 ````import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
