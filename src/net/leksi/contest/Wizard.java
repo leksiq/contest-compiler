@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
@@ -90,7 +91,7 @@ public class Wizard {
         }
     }
     static final String DELIMS = "/,;()[]";
-    static final String TYPES = "ilbfds";
+    static final String TYPES = "ilds";
     
     Stack<Cycle> cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
@@ -188,7 +189,10 @@ public class Wizard {
 //                System.out.println(c);
                 if(!wait_for_name) {
                     if(wf.indexOf(c) < 0) {
-                        throw new RuntimeException("Unexpected symbol: '" + c + "', expecting: \"" + wf + "\"");
+                        throw new RuntimeException("Unexpected symbol: '" + c + 
+                                "', expecting: " + Arrays.stream(wf.split("")).
+                                        map(v -> "'" + v.charAt(0) + "'").
+                                        collect(Collectors.joining(", ")) + ".");
                     }
                     if(TYPES.indexOf(c) >= 0) {
                         type = String.valueOf(c);
