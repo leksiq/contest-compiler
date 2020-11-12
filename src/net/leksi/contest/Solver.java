@@ -116,16 +116,21 @@ public abstract class Solver {
     }
 
     protected void run() throws IOException {
-        try {
-            try (
-                FileInputStream fis = new FileInputStream(nameIn);
-                PrintWriter pw0 = select_output();
-            ) {
-                sc = new Scanner(fis);
-                pw = pw0;
-                process();
-            }
-        } catch(IOException ex) {
+        boolean done = false;
+        if(nameIn != null) {
+            try {
+                try (
+                    FileInputStream fis = new FileInputStream(nameIn);
+                    PrintWriter pw0 = select_output();
+                ) {
+                    done = true;
+                    sc = new Scanner(fis);
+                    pw = pw0;
+                    process();
+                }
+            } catch(IOException ex) {}
+        }
+        if(!done) {
             try (
                 PrintWriter pw0 = select_output();
             ) {
