@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class Solver {
@@ -95,23 +96,51 @@ public abstract class Solver {
         return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
     }
     
-    protected String intArrayToString(final int[] a) {
+    protected String joinToString(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(" "));
     }
-
-    protected String longArrayToString(final long[] a) {
+    
+    protected String joinToString(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(" "));
     }
+    
+    @Deprecated
+    protected String intArrayToString(final int[] a) {
+        return joinToString(a);
+    }
 
+    @Deprecated
+    protected String longArrayToString(final long[] a) {
+        return joinToString(a);
+    }
+
+    protected <T> String joinToString(final List<T> a) {
+        return a.stream().map(v -> v.toString()).collect(Collectors.joining(" "));
+    }
+
+    protected <T> String joinToString(final List<T> a, final Function<T,String> toString) {
+        return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(" "));
+    }
+
+    @Deprecated
     protected List<Long> longArrayToList(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
+    @Deprecated
     protected List<Integer> intArrayToList(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
     }
 
     protected List<Long> intArrayToLongList(final int[] a) {
+        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Integer> toList(final int[] a) {
+        return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Long> toList(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
