@@ -2,6 +2,7 @@
 The library is intended to simplify some routines when using Java for "Online Judges" contests.
 + Quick coding input data structure and read it;
 + Using one's favorite algorithms without copying sources into your submission manually.
++ Testing locally on a set of test if there is a single-test judging.
 ## Preface
 This library would be useful for one who likes to solve programming problems, take part in online programming contests and use Java for these purposes. First, one needs everytime coding the same routines to read input data. Second, If one have one's favorite homemade classes implementing various algorithms one has to copy-paste them into the source file to submit into "Online Judges" system as it acceps single file. Thus, this library helps to concentrate on the problem itself.
 ## How It Works
