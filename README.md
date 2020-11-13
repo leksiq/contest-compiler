@@ -2,7 +2,7 @@
 The library is intended to simplify some routines when using Java for "Online Judges" contests.
 + Quick coding input data structure and read it;
 + Using one's favorite algorithms without copying sources into your submission manually.
-+ Testing locally on a set of test if there is a single-test judging.
++ Testing locally on a set of tests if there is a single-test judging.
 ## Preface
 This library would be useful for one who likes to solve programming problems, take part in online programming contests and use Java for these purposes. First, one needs everytime coding the same routines to read input data. Second, If one have one's favorite homemade classes implementing various algorithms one has to copy-paste them into the source file to submit into "Online Judges" system as it acceps single file. Thus, this library helps to concentrate on the problem itself.
 ## How It Works
@@ -135,22 +135,29 @@ There are some methods to simplify routine actions:
 
     protected long[] lineToLongArray() throws IOException;
     
-    protected String intArrayToString(final int[] a);
+    protected String joinToString(final int[] a);
 
-    protected String longArrayToString(final long[] a);
+    protected String joinToString(final long[] a);
     
-    protected List<Long> longArrayToList(final long[] a);
+    protected <T> String joinToString(final Collection<T> a);
+    
+    protected <T> String joinToString(final Collection<T> a, final Function<T, String> toString);
+    
+    protected <T> String joinToString(final T[] a);
+    
+    protected <T> String joinToString(final T[] a, final Function<T, String> toString);
+    
+    protected List<Long> toList(final long[] a);
 
-    protected List<Integer> intArrayToList(final int[] a);
+    protected List<Integer> toList(final int[] a);
     
     protected List<Long> intArrayToLongList(final int[] a);
     
 1. `lineToIntArray` parses rest of input line as `int[]` delimited with spaces.
 1. `lineToLongArray` parses rest of input line as `long[]` delimited with spaces.
-1. `intArrayToString` joins `int[]` into `String` delimited with spaces.
+1. `joinToString` joins `int[]` or `long[]`, or Object's array or Collection into `String` delimited with spaces.
 1. `longArrayToString` joins `long[]` into `String` delimited with spaces.
-1. `longArrayToList` creates  `List<Long>` from `long[]`.
-1. `intArrayToList` creates  `List<Integer>` from `int[]`.
+1. `toList` creates  `List<Long>` from `long[]` and `List<Integer>` from `int[]`.
 1. `intArrayToLongList` creates  `List<Long>` from `int[]`.
 
 Also there are predefined protected fields for reading input and writing to output:
@@ -188,7 +195,9 @@ public class p001417A extends Solver {
     public void readInput() throws IOException {
         n = sc.nextInt();
         k = sc.nextInt();
-        sc.nextLine();
+        if(sc.hasNextLine()) {
+            sc.nextLine();
+        }
         a = Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
     }
     static public void main(String[] args) throws IOException {
@@ -224,7 +233,9 @@ public class p001417A extends Solver {
     public void readInput() throws IOException {
         n = sc.nextInt();
         k = sc.nextInt();
-        sc.nextLine();
+        if(sc.hasNextLine()) {
+            sc.nextLine();
+        };
         a = Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
     }
     static public void main(String[] args) throws IOException {
@@ -250,9 +261,9 @@ static private class p001417A extends Solver{public p001417A(){nameIn="demo/p001
 ;singleTest=false;}int n;int k;int[]a;@Override protected void solve(){IntArraySorter
 .sort(a);int res=Arrays.stream(a,1,n).map(v->(k-v)/a[0]).sum();pw.println(res);}
 @Override public void readInput()throws IOException{n=sc.nextInt();k=sc.nextInt(
-);sc.nextLine();a=Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer
-::valueOf).toArray();}static public void _main(String[]args)throws IOException{new
-p001417A().run();}}
+);if(sc.hasNextLine()) {sc.nextLine();};a=Arrays.stream(sc.nextLine().trim().split("\\s+"
+)).mapToInt(Integer::valueOf).toArray();}static public void _main(String[]args)throws 
+IOException{newp001417A().run();}}
 //end p001417A.java
 //begin net/leksi/contest/Solver.java
 static private abstract class Solver{protected String nameIn=null;protected String
