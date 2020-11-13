@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Function;
@@ -114,11 +115,19 @@ public abstract class Solver {
         return joinToString(a);
     }
 
-    protected <T> String joinToString(final List<T> a) {
+    protected <T> String joinToString(final T[] a) {
+        return Arrays.stream(a).map(v -> v.toString()).collect(Collectors.joining(" "));
+    }
+
+    protected <T> String joinToString(final T[] a, final Function<T,String> toString) {
+        return Arrays.stream(a).map(v -> v.toString()).collect(Collectors.joining(" "));
+    }
+
+    protected <T> String joinToString(final Collection<T> a) {
         return a.stream().map(v -> v.toString()).collect(Collectors.joining(" "));
     }
 
-    protected <T> String joinToString(final List<T> a, final Function<T,String> toString) {
+    protected <T> String joinToString(final Collection<T> a, final Function<T,String> toString) {
         return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(" "));
     }
 
