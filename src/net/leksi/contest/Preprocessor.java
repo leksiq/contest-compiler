@@ -30,7 +30,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -84,6 +86,14 @@ class Preprocessor {
         JarFile jarFile;
         JarEntry jarEntry;
     }
+    
+    private String url_decode(String url) {
+        try {
+            return URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            return url;
+        }
+    }
 
     public void run(final String arg) {
 //        System.out.println(arg);
@@ -91,7 +101,7 @@ class Preprocessor {
         
 
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
-                getContextClassLoader())).getURLs()).map(v -> v.getPath()).collect(Collectors.joining(File.pathSeparator));
+                getContextClassLoader())).getURLs()).map(v -> url_decode(v.getPath())).collect(Collectors.joining(File.pathSeparator));
         if(debug) { System.out.println("classpath: " + classPath); }
         
         String[] params = new String[6];
