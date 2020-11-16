@@ -36,6 +36,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -103,6 +104,13 @@ class Preprocessor {
         String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
                 getContextClassLoader())).getURLs()).map(v -> url_decode(v.getPath())).collect(Collectors.joining(File.pathSeparator));
         if(debug) { System.out.println("classpath: " + classPath); }
+        
+        Map<String, String> env = System.getenv();
+        for (String envName : env.keySet()) {
+            System.out.format("%s=%s%n",
+                              envName,
+                              env.get(envName));
+        }
         
         String[] params = new String[6];
         params[0] = "javap";
