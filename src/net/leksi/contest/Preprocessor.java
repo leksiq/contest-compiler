@@ -106,14 +106,15 @@ class Preprocessor {
         if(debug) { System.out.println("classpath: " + classPath); }
         
         Map<String, String> env = System.getenv();
-        for (String envName : env.keySet()) {
-            System.out.format("%s=%s%n",
-                              envName,
-                              env.get(envName));
-        }
+//        for (String envName : env.keySet()) {
+//            System.out.format("%s=%s%n",
+//                              envName,
+//                              env.get(envName));
+//        }
         
         String[] params = new String[6];
-        params[0] = "javap";
+        params[0] = (env.containsKey("_") && env.get("_").endsWith("/java") ? 
+                env.get("_").substring(0, env.get("_").length() - 4) : "") + "javap";
         params[1] = "-c";
         params[2] = "-p";
         params[3] = "-classpath";
