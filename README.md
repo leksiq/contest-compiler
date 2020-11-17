@@ -297,3 +297,8 @@ static private class IntArraySorter{public static void sort(int[]arr){Arrays.sor
 }
 
 ````
+## Troubleshooting
+### `javap` is not found or not working
+Try to use java option `-Dnet.leksi.solver.javap.dir=<directory-with-working-javap>`
+
+For example: `java -Dnet.leksi.solver.javap.dir=f:/jdk1.8.0_221/bin -classpath net.leksi.contest.assistant.jar;demo/src p001417A`
