@@ -105,16 +105,6 @@ public abstract class Solver {
         return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(" "));
     }
     
-    @Deprecated
-    protected String intArrayToString(final int[] a) {
-        return joinToString(a);
-    }
-
-    @Deprecated
-    protected String longArrayToString(final long[] a) {
-        return joinToString(a);
-    }
-
     protected <T> String joinToString(final T[] a) {
         return Arrays.stream(a).map(v -> v.toString()).collect(Collectors.joining(" "));
     }
@@ -129,16 +119,6 @@ public abstract class Solver {
 
     protected <T> String joinToString(final Collection<T> a, final Function<T,String> toString) {
         return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(" "));
-    }
-
-    @Deprecated
-    protected List<Long> longArrayToList(final long[] a) {
-        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
-    }
-
-    @Deprecated
-    protected List<Integer> intArrayToList(final int[] a) {
-        return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
     }
 
     protected List<Long> intArrayToLongList(final int[] a) {

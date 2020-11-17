@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -106,15 +107,20 @@ class Preprocessor {
         if(debug) { System.out.println("classpath: " + classPath); }
         
         Map<String, String> env = System.getenv();
-//        for (String envName : env.keySet()) {
-//            System.out.format("%s=%s%n",
-//                              envName,
-//                              env.get(envName));
-//        }
+        Properties props = System.getProperties();
+        
+        String dir = "";
+        if(props.containsKey("net.leksi.solver.javap.dir")) {
+            dir = props.getProperty("net.leksi.solver.javap.dir");
+        } else if(env.containsKey("_") && env.get("_").endsWith("/java")) {
+            dir = env.get("_").substring(0, env.get("_").length() - 4);
+        }
+        
+        System.out.println(dir);
         
         String[] params = new String[6];
-        params[0] = (env.containsKey("_") && env.get("_").endsWith("/java") ? 
-                env.get("_").substring(0, env.get("_").length() - 4) : "") + "javap";
+        params[0] = (!"".equals(dir) ? (dir + "/").replace("//", "/").
+                replace("\\/", "/").replace("\\", "/") : "") + "javap";
         params[1] = "-c";
         params[2] = "-p";
         params[3] = "-classpath";
