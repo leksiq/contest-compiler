@@ -290,7 +290,7 @@ public class Wizard {
         if(!(last_var instanceof Variable) || !"/".equals(((Variable)last_var).type)) {
             var = new Variable();
             var.type = "/";
-            last_cycle.variables.add(var);
+            cycles.get(0).variables.add(var);
         }
 //        System.out.println(cycles);
         
