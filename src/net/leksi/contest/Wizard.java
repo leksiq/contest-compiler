@@ -91,7 +91,7 @@ public class Wizard {
         }
     }
     static final String DELIMS = "/,;()[]";
-    static final String TYPES = "ilds";
+    static final String TYPES = "ildst";
     
     Stack<Cycle> cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
@@ -341,6 +341,9 @@ public class Wizard {
                 case 's':
                     type1 = "String";
                     break;
+                case 't':
+                    type1 = "Token";
+                    break;
                 default:
                     type1 = "int";
                     break;
@@ -350,7 +353,9 @@ public class Wizard {
         UnaryOperator<String> next2 = s -> {
             if(s.charAt(0) != 's') {
                 String type1 = type2.apply(s);
-                return type1.substring(0, 1).toUpperCase() + type1.substring(1);
+                if(!"Token".equals(type1)) {
+                    return type1.substring(0, 1).toUpperCase() + type1.substring(1);
+                }
             }
             return "";
         };
@@ -390,6 +395,9 @@ public class Wizard {
                     if(!"/".equals(vv.type)) {
                         String nextType;
                         String type1 = type2.apply(vv.type);
+                        if("Token".equals(type1)) {
+                            type1 = "String";
+                        }
                         String next = next2.apply(vv.type);
                         if(vv.type.endsWith("[")) {
                             type1 += "[]";
