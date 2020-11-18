@@ -39,7 +39,7 @@ The "input script" means the script on lightweight special language. This script
     variable-name               ::=     <Java's  legal identifier>
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)
     new-line                    ::=     '/'
-    type                        ::=     'i' | 'l' | 'd' | 's'
+    type                        ::=     'i' | 'l' | 'd' | 's' | 't'
     variable-definition         ::=     variable-name ('[' array-length? ']')?
     array-length                ::=     variable-name | number
     
@@ -47,10 +47,14 @@ The "input script" means the script on lightweight special language. This script
 
 `'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
 
-`type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'` stand for `int`, `long`, `double` and `java.lang.String` respectively.
+`type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
 
-`java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. Space chars may present between any terms.
+`java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. 
+
+`Token` variable takes all chars till the next space or  till the end of line if no spaces, `Token` *array* variable takes the same way as `java.lang.String` *array*.
+
+Space chars may present between any terms of a script.
 
 ### The Script Language Examples
 #### Example 1
