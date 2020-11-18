@@ -275,11 +275,9 @@ public class Wizard {
                         var.length = name;
                         var = null;
                     }
-                    if(j < script.length()) {
-                        for(; Character.isSpaceChar(script.charAt(j)); j++){}
-                        if(wf.indexOf(script.charAt(j)) < 0) {
-                            throw new RuntimeException("Unexpected symbol: '" + script.charAt(j) + "', expecting: \"" + wf + "\"");
-                        }
+                    for(; j < script.length() && Character.isSpaceChar(script.charAt(j)); j++){}
+                    if(j < script.length() && wf.indexOf(script.charAt(j)) < 0) {
+                        throw new RuntimeException("Unexpected symbol: '" + script.charAt(j) + "', expecting: \"" + wf + "\"");
                     }
                     i = j - 1;
                     wait_for_name = false;
