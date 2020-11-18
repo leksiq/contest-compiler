@@ -9,7 +9,7 @@ This library would be useful for one who likes to solve programming problems, ta
 The work falls into three steps.
 1. Run **Wizard** with class name and one-line script describing input rule to get a stub with input data structure supplied.
 2. Write code as a body of `protected void solve() throws IOException` method. Import any custom libraries developed earlier (given that their sources can be found through classpath).
-3. Compile and run developed class with test samples. Let's call it **preprocessing**. The resulting source to submit to judge system will be found at the sources directory with underscore before name.
+3. Compile and run developed class with test samples. Let's call it **preprocessing**. The resulting source to submit to judge system will be found at the sources directory with underscore before name. **NOTE:** Java Development Kit is needed to be installed!
 
 See **Examples** below.
 
