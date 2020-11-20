@@ -34,10 +34,10 @@ The "input script" means the script on lightweight special language. This script
     script                      ::=     ('*' | '?')? input-of-test
     input-of-test               ::=     input-of-cycle
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
-    cycle                       ::=     '(' variable-name | number ';' input-of-cycle ')'
+    cycle                       ::=     '(' (variable-name | number) ';' input-of-cycle ')'
     variables-group             ::=     same-type-variables-group (';' same-type-variables-group | new-line)*
     variable-name               ::=     <Java's  legal identifier>
-    same-type-variables-group   ::=     type variable-definition (',' variable-definition)
+    same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
     new-line                    ::=     '/'
     type                        ::=     'i' | 'l' | 'd' | 's' | 't'
     variable-definition         ::=     variable-name ('[' array-length? ']')?
