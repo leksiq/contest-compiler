@@ -23,7 +23,9 @@ Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data s
         -src <directory>        - the directory to generate source into (default .);
         -in <name>              - generate input file <name> (default <class-name>.in);
         -package package        - the package of class to generate (default empty);
-        -force                  - overwrite existing files (default throws exception for source file and leaves input file);
+        -force                  - overwrite existing files (default throws exception for source file) and leaves input file;
+        -version                - shows current version and checks if it is latest, then returns;
+        -usage, -help, ?        - shows this info, then returns;
     class-name:             name of class to generate;
     script:                 input script;
 

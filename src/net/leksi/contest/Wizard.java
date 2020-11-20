@@ -23,17 +23,27 @@
  */
 package net.leksi.contest;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 /**
@@ -56,9 +66,56 @@ public class Wizard {
         System.out.println("        -src <directory>        - the directory to generate source into (default .);");
         System.out.println("        -in <name>              - generate input file <name> (default <class-name>.in);");
         System.out.println("        -package package        - the package of class to generate (default empty);");
-        System.out.println("        -force                  - overwrite existing files (default throws exception for source file and leaves input file);");
+        System.out.println("        -force                  - overwrite existing files (default throws exception for source file) and leaves input file;");
+        System.out.println("        -version                - shows current version and checks if it is latest, then returns;");
+        System.out.println("        -usage, -help, ?        - shows this info, then returns;");
         System.out.println("    class-name:             name of class to generate;");
         System.out.println("    script:                 input script;");
+    }
+
+    private void version() {
+        try {
+            String[] version = new String[]{null, null};
+            Enumeration<URL> resources = getClass().getClassLoader()
+                    .getResources("META-INF/MANIFEST.MF");
+            while (resources.hasMoreElements()) {
+                    Manifest manifest = new Manifest(resources.nextElement().openStream());
+                    Map<String, Attributes> entries = manifest.getEntries();
+                    entries.keySet().stream().allMatch(k -> {
+                        return entries.get(k).entrySet().stream().allMatch(e -> {
+//                            System.out.println(">" + e.getKey() + "<");
+                            if("Implementation-Version".equals(e.getKey().toString())) {
+                                version[0] = e.getValue().toString();
+                                return false;
+                            }
+                            return true;
+                        });
+                    });
+            }
+            System.out.println("Version");
+            System.out.println("current: " + version[0]);
+            Reader BufferedReader;
+            final String path = "/leksiq/java-contest-assistant/releases/tag/";
+            try (
+                Reader r = new InputStreamReader((InputStream)new URL("https://github.com/leksiq/java-contest-assistant").getContent());
+                BufferedReader br = new BufferedReader(r);
+            ) {
+                String line;
+                while((line = br.readLine()) != null) {
+                    if(line.contains("href=\"" + path)) {
+                        version[1] = line.substring(line.indexOf(path) + path.length(), line.indexOf("\">"));
+                        break;
+                    }
+                }
+            }
+            System.out.println("latest: " + version[1]);
+            if(!version[1].equals(version[0])) {
+                System.out.println("A newer version is released. To download visit:");
+                System.out.println("https://github.com/leksiq/java-contest-assistant/releases/download/" + version[1] + "/net.leksi.contest.assistant.jar");
+            }
+        } catch (IOException E) {
+            System.out.println("error occured: " + E.toString());
+        }
     }
     
     interface IVariable {}
@@ -121,6 +178,12 @@ public class Wizard {
                     stdout = true;
                 } else if("-force".equals(args[i])) {
                     force = true;
+                } else if("-version".equals(args[i])) {
+                    version();
+                    return;
+                } else if("-usage".equals(args[i]) || "-help".equals(args[i]) || "-?".equals(args[i])) {
+                    usage();
+                    return;
                 }
             } else if(class_name == null) {
                 class_name = args[i];
