@@ -78,6 +78,11 @@ public abstract class Solver {
             int t = lineToIntArray()[0];
             while(t-- > 0) {
                 readInput();
+                /*+Preprocess-DONOTCOPY*/
+                if(localMultiTest) {
+                    pw.println("--- test ---");
+                }
+                /*-Preprocess-DONOTCOPY*/
                 solve();
             }
         } else {
