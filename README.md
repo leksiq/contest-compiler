@@ -16,18 +16,20 @@ See **Examples** below.
 ## 1. Running the Wizard
 Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data structure is coded and ready to be read without (almost) any actions. An empty test input file is created as well. The usage of the `net.leksi.contest.Wizard`:
 
-    Usage: java java_options -jar net.leksi.contest.assistant.jar wizard_options class-name script
+    Usage: java java_options -jar net.leksi.contest.compiler.jar wizard_options class-name script
     java_options:           java options like -classpath;
     wizard_options:
         -stdout                 - write to stdout (default creates file <class-name>.java);
         -src <directory>        - the directory to generate source into (default .);
-        -in <name>              - generate input file <name> (default <class-name>.in);
+        -in <directory>         - the directory to generate input file into (default .);
+        -infile <name>          - generate input file <name> (default <class-name>.in);
         -package package        - the package of class to generate (default empty);
         -force                  - overwrite existing files (default throws exception for source file) and leaves input file;
         -version                - shows current version and checks if it is latest, then returns;
         -usage, -help, ?        - shows this info, then returns;
     class-name:             name of class to generate;
     script:                 input script;
+
 
     
 The "input script" means the script on lightweight special language. This script follows the task input description.
