@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +63,8 @@ public class Wizard {
         System.out.println("    wizard_options:");
         System.out.println("        -stdout                 - write to stdout (default creates file <class-name>.java);");
         System.out.println("        -src <directory>        - the directory to generate source into (default .);");
-        System.out.println("        -in <name>              - generate input file <name> (default <class-name>.in);");
+        System.out.println("        -in <directory>         - the directory to generate input file into (default .);");
+        System.out.println("        -infile <name>          - generate input file <name> (default <class-name>.in);");
         System.out.println("        -package package        - the package of class to generate (default empty);");
         System.out.println("        -force                  - overwrite existing files (default throws exception for source file) and leaves input file;");
         System.out.println("        -version                - shows current version and checks if it is latest, then returns;");
@@ -157,6 +157,7 @@ public class Wizard {
     private void run(String[] args) throws IOException {
         String pkg = null;
         String src = null;
+        String in_dir = null;
         String in_name = null;
         String class_name = null;
         String script = null;
@@ -172,6 +173,9 @@ public class Wizard {
                     i++;
                     pkg = args[i];
                 } else if("-in".equals(args[i])) {
+                    i++;
+                    in_dir = args[i];
+                } else if("-infile".equals(args[i])) {
                     i++;
                     in_name = args[i];
                 } else if("-stdout".equals(args[i])) {
@@ -203,13 +207,16 @@ public class Wizard {
             if(force) {
                 System.out.println("Warning: -stdout applied, -force ignored.");
             }
-            if(in_name != null) {
-                in_name = null;
+            if(in_dir != null) {
+                in_dir = null;
                 System.out.println("Warning: -stdout applied, -in ignored.");
             }
         } else {
             if(src == null) {
                 src = ".";
+            }
+            if(in_dir == null) {
+                in_dir = ".";
             }
             if(in_name == null) {
                 in_name = class_name + ".in";
@@ -371,7 +378,7 @@ public class Wizard {
         StringBuilder sb2 = new StringBuilder();
         sb1.append("public class ").append(class_name).append(" extends Solver {\n");
         sb1.append("    public ").append(class_name).append("() {\n");
-        sb1.append("        nameIn = \"").append(in_name).append("\";\n");
+        sb1.append("        nameIn = \"").append(in_dir).append("\";\n");
         if(singleTest[0]) {
             sb1.append("        singleTest = ").append(singleTest[0]).append(";\n");
         }
@@ -622,7 +629,11 @@ public class Wizard {
                 fw.write(sb1.toString());
             }
             
-            File in_file = new File(in_name);
+            File in_file = new File(in_dir);
+            if(!in_file.exists()) {
+                in_file.mkdirs();
+            }
+            in_file = new File(in_dir, in_name);
             if(!in_file.exists()) {
                 try (
                     FileWriter fw = new FileWriter(in_file);
