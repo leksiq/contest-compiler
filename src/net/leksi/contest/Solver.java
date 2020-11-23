@@ -23,10 +23,12 @@
  */
 package net.leksi.contest;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -140,18 +142,20 @@ public abstract class Solver {
 
     protected void run() throws IOException {
         boolean done = false;
-        if(nameIn != null) {
-            try {
-                try (
-                    FileInputStream fis = new FileInputStream(nameIn);
-                    PrintWriter pw0 = select_output();
-                ) {
-                    done = true;
-                    sc = new Scanner(fis);
-                    pw = pw0;
-                    process();
-                }
-            } catch(IOException ex) {}
+        try {
+            if(nameIn != null && new File(nameIn).exists()) {
+                    try (
+                        FileInputStream fis = new FileInputStream(nameIn);
+                        PrintWriter pw0 = select_output();
+                    ) {
+                        done = true;
+                        sc = new Scanner(fis);
+                        pw = pw0;
+                        process();
+                    }
+            }
+        } catch(IOException ex) {
+        } catch(AccessControlException ex) {
         }
         if(!done) {
             try (

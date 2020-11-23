@@ -77,6 +77,7 @@ class Preprocessor {
     
     public void debug(final boolean debug) {
         this.debug = debug;
+        System.setOut(System.err);
     }
 
     public void skipPrefix(final String skipPrefix) {
@@ -352,10 +353,18 @@ class Preprocessor {
                                         case CODE:
                                             matcher = pCode.matcher(line);
                                             if(!matcher.matches()) {
-                                                throw new RuntimeException("Inconsistent case: " + wf[0] + " and " + line);
+                                                if("}".equals(line)) {
+                                                    if (debug) {
+                                                        System.out.println(INDENTION + wf[0] + " OK" + (skip ? " (skipped)" : ""));
+                                                    }
+                                                    wf[0] = WaitingFor.METHOD_OR_FIELD;
+                                                } else {
+                                                    throw new RuntimeException("Inconsistent case: " + wf[0] + " and " + line);
+                                                }
+                                            } else {
+                                                if(debug) { System.out.println(INDENTION + wf[0] + " OK" + (skip ? " (skipped)" : "")); }
+                                                wf[0] = WaitingFor.OPER;
                                             }
-                                            if(debug) { System.out.println(INDENTION + wf[0] + " OK" + (skip ? " (skipped)" : "")); }
-                                            wf[0] = WaitingFor.OPER;
                                             break;
                                         case TABLE_SWITCH:
                                         case LOOKUP_SWITCH:
