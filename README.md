@@ -124,6 +124,7 @@ and optionally reassigning protected fields
     protected boolean localMultiTest = false;
     protected boolean doNotPreprocess = false;
     protected boolean preprocessDebug = false;
+    protected PrintStream debugPrintStream = null;
 
 1. `nameIn` - name of input file if the problem requires file input or while testing. Otherwise leave it unchanged (default `null` means console input). If the input file is not found then console input is used, so you may test using file input and submit into "Online Judges" system with console input without changing.
 2. `nameOut` - name of output file if the problem requires file output or while testing, otherwise leave it unchanged (default `null` means console output). **Unlike the previous case you should set `null` if the problem requires console output**.
@@ -136,6 +137,7 @@ and optionally reassigning protected fields
 ````
 5. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
 6. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
+7. `debugPrintStream` - set `System.err` if you want to get Exception message at the place it is thrown.
 
 There are some methods to simplify routine actions:
 
@@ -145,8 +147,12 @@ There are some methods to simplify routine actions:
     
     protected String joinToString(final int[] a);
 
+    protected String joinToString(final IntStream a);
+
     protected String joinToString(final long[] a);
     
+    protected String joinToString(final LongStream a);
+
     protected <T> String joinToString(final Collection<T> a);
     
     protected <T> String joinToString(final Collection<T> a, final Function<T, String> toString);
@@ -155,9 +161,15 @@ There are some methods to simplify routine actions:
     
     protected <T> String joinToString(final T[] a, final Function<T, String> toString);
     
+    protected <T> String joinToString(final Stream<T> a);
+    
+    protected <T> String joinToString(final Stream<T> a, final Function<T, String> toString);
+    
     protected List<Long> toList(final long[] a);
 
     protected List<Integer> toList(final int[] a);
+    
+    protected <T> List<T> toList(final T[] a);
     
     protected List<Long> intArrayToLongList(final int[] a);
     
