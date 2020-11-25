@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
@@ -73,11 +74,17 @@ class Preprocessor {
     }
 
     private boolean debug = false;
+    private PrintStream debugPrintStream = System.out;
     private String skipPrefix = null;
     
     public void debug(final boolean debug) {
         this.debug = debug;
-        System.setOut(System.err);
+        System.setOut(debugPrintStream);
+    }
+
+    public void debugPrintStream(final PrintStream debugPrintStream) {
+        this.debugPrintStream = debugPrintStream;
+        debug(this.debug);
     }
 
     public void skipPrefix(final String skipPrefix) {

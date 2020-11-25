@@ -27,14 +27,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 public abstract class Solver {
     
@@ -44,9 +49,13 @@ public abstract class Solver {
 
     protected boolean preprocessDebug = false;
     protected boolean doNotPreprocess = false;
+    protected PrintStream debugPrintStream = null;
     
     protected Scanner sc = null;
     protected PrintWriter pw = null;
+    
+    final String SPACE = " ";
+    final String SPACES = "\\s+";
     
     /*+Preprocess-DONOTCOPY*/
     
@@ -60,6 +69,9 @@ public abstract class Solver {
             }
             Preprocessor pp = new Preprocessor();
             pp.debug(preprocessDebug);
+            if(preprocessDebug && debugPrintStream != null) {
+                pp.debugPrintStream(debugPrintStream);
+            }
             pp.skipPrefix("Preprocess_DONOTCOPY");
             pp.run(running);
             if(preprocessDebug) {
@@ -97,35 +109,51 @@ public abstract class Solver {
     abstract protected void solve() throws IOException;
 
     protected int[] lineToIntArray() throws IOException {
-        return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
+        return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToInt(Integer::valueOf).toArray();
     }
 
     protected long[] lineToLongArray() throws IOException {
-        return Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToLong(Long::valueOf).toArray();
+        return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToLong(Long::valueOf).toArray();
     }
     
     protected String joinToString(final int[] a) {
-        return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(" "));
+        return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
     }
     
     protected String joinToString(final long[] a) {
-        return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(" "));
+        return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(SPACE));
     }
     
     protected <T> String joinToString(final T[] a) {
-        return Arrays.stream(a).map(v -> v.toString()).collect(Collectors.joining(" "));
+        return Arrays.stream(a).map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
     }
 
     protected <T> String joinToString(final T[] a, final Function<T,String> toString) {
-        return Arrays.stream(a).map(v -> v.toString()).collect(Collectors.joining(" "));
+        return Arrays.stream(a).map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
     }
 
     protected <T> String joinToString(final Collection<T> a) {
-        return a.stream().map(v -> v.toString()).collect(Collectors.joining(" "));
+        return a.stream().map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
     }
 
     protected <T> String joinToString(final Collection<T> a, final Function<T,String> toString) {
-        return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(" "));
+        return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String joinToString(final Stream<T> a) {
+        return a.map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String joinToString(final Stream<T> a, final Function<T,String> toString) {
+        return a.map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String joinToString(final IntStream a) {
+        return a.mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String joinToString(final LongStream a) {
+        return a.mapToObj(Long::toString).collect(Collectors.joining(SPACE));
     }
 
     protected List<Long> intArrayToLongList(final int[] a) {
@@ -136,8 +164,24 @@ public abstract class Solver {
         return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
     }
 
+    protected List<Integer> toList(final IntStream a) {
+        return a.mapToObj(Integer::valueOf).collect(Collectors.toList());
+    }
+
     protected List<Long> toList(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Long> toList(final LongStream a) {
+        return a.mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected <T> List<T> toList(final Stream<T> a) {
+        return a.collect(Collectors.toList());
+    }
+
+    protected <T> List<T> toList(final T[] a) {
+        return Arrays.stream(a).collect(Collectors.toList());
     }
 
     protected void run() throws IOException {
@@ -169,6 +213,11 @@ public abstract class Solver {
     }
 
     private PrintWriter select_output() throws FileNotFoundException {
+        /*+Preprocess-DONOTCOPY*/
+        if (preprocessDebug && debugPrintStream != null) {
+            return new PrintWriter(debugPrintStream);
+        }
+        /*-Preprocess-DONOTCOPY*/
         if (nameOut != null) {
             return new PrintWriter(nameOut);
         }
