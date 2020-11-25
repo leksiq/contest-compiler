@@ -615,7 +615,7 @@ class Preprocessor {
             imports.stream().filter(v -> {
                 String cl = v.substring(v.indexOf("import") + "import".length()).trim();
                 cl = cl.substring(0, cl.indexOf(";"));
-                return !decompiledClasses.contains(cl);
+                return !decompiledClasses.contains(cl) && sb.toString().contains(cl.substring(cl.lastIndexOf(".") + 1));
             }).forEach(v -> sb1.append(v).append("\n"));
             sb1.append("public class _").append(main_class).append(" {\n");
             sb1.append("    static public void main(final String[] args) ");
