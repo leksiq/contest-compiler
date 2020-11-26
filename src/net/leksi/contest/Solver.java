@@ -94,22 +94,19 @@ public abstract class Solver {
         if(!singleTest) {
             int t = lineToIntArray()[0];
             while(t-- > 0) {
-                readInput();
                 /*+Preprocess-DONOTCOPY*/
                 if(localMultiTest) {
                     pw.println("--- test ---");
                 }
                 /*-Preprocess-DONOTCOPY*/
-                solve();
+                readInput();
             }
         } else {
             readInput();
-            solve();
         }
     }
     
     abstract protected void readInput() throws IOException;
-    abstract protected void solve() throws IOException;
 
     protected int[] lineToIntArray() throws IOException {
         return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToInt(Integer::valueOf).toArray();
@@ -119,74 +116,6 @@ public abstract class Solver {
         return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToLong(Long::valueOf).toArray();
     }
     
-    protected String joinToString(final int[] a) {
-        return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
-    }
-    
-    protected String joinToString(final long[] a) {
-        return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(SPACE));
-    }
-    
-    protected <T> String joinToString(final T[] a) {
-        return Arrays.stream(a).map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final T[] a, final Function<T,String> toString) {
-        return Arrays.stream(a).map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final Collection<T> a) {
-        return a.stream().map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final Collection<T> a, final Function<T,String> toString) {
-        return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final Stream<T> a) {
-        return a.map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final Stream<T> a, final Function<T,String> toString) {
-        return a.map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final IntStream a) {
-        return a.mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
-    }
-
-    protected <T> String joinToString(final LongStream a) {
-        return a.mapToObj(Long::toString).collect(Collectors.joining(SPACE));
-    }
-
-    protected List<Long> intArrayToLongList(final int[] a) {
-        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
-    }
-
-    protected List<Integer> toList(final int[] a) {
-        return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
-    }
-
-    protected List<Integer> toList(final IntStream a) {
-        return a.mapToObj(Integer::valueOf).collect(Collectors.toList());
-    }
-
-    protected List<Long> toList(final long[] a) {
-        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
-    }
-
-    protected List<Long> toList(final LongStream a) {
-        return a.mapToObj(Long::valueOf).collect(Collectors.toList());
-    }
-
-    protected <T> List<T> toList(final Stream<T> a) {
-        return a.collect(Collectors.toList());
-    }
-
-    protected <T> List<T> toList(final T[] a) {
-        return Arrays.stream(a).collect(Collectors.toList());
-    }
-
     protected void run() throws IOException {
         boolean done = false;
         try {
@@ -357,4 +286,68 @@ public abstract class Solver {
         int[] i = new int[]{0};
         return a.map(v -> new Pair<T, Integer>(v, i[0]++)).collect(Collectors.toList());
     }
+    protected String join(final int[] a) {
+        return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
+    }
+    
+    protected String join(final long[] a) {
+        return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(SPACE));
+    }
+    
+    protected <T> String join(final T[] a) {
+        return Arrays.stream(a).map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final T[] a, final Function<T,String> toString) {
+        return Arrays.stream(a).map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final Collection<T> a) {
+        return a.stream().map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final Collection<T> a, final Function<T,String> toString) {
+        return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final Stream<T> a) {
+        return a.map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final Stream<T> a, final Function<T,String> toString) {
+        return a.map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final IntStream a) {
+        return a.mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
+    }
+
+    protected <T> String join(final LongStream a) {
+        return a.mapToObj(Long::toString).collect(Collectors.joining(SPACE));
+    }
+
+    protected List<Integer> list(final int[] a) {
+        return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Integer> list(final IntStream a) {
+        return a.mapToObj(Integer::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Long> list(final long[] a) {
+        return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected List<Long> list(final LongStream a) {
+        return a.mapToObj(Long::valueOf).collect(Collectors.toList());
+    }
+
+    protected <T> List<T> list(final Stream<T> a) {
+        return a.collect(Collectors.toList());
+    }
+
+    protected <T> List<T> list(final T[] a) {
+        return Arrays.stream(a).collect(Collectors.toList());
+    }
+
 }

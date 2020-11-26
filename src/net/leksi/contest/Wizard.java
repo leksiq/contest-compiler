@@ -516,8 +516,8 @@ public class Wizard {
                                     if(sb0.indexOf("java.util.Arrays") < 0) {
                                         sb0.append("import java.util.Arrays;\n");
                                     }
-                                    sb2.append(" = Arrays.stream(").append("sc.nextLine().trim().split(\"\\\\s+\")).mapTo").append(next).append("(").
-                                            append(vv.type.charAt(0) == 'i' ? "Integer" : next).append("::valueOf).toArray()");
+                                    sb2.append(" = lineTo").append(next).append("(").
+                                            append(vv.type.charAt(0) == 'i' ? "Int" : next).append("Array()");
                                 } else {
                                     sb2.append(" = sc.nextLine().trim().split(\"\\\\s+\")");
                                 }

@@ -16,7 +16,10 @@ public class p000009A extends Solver {
     int Y;
     int W;
     @Override
-    protected void solve() {
+    public void readInput() throws IOException {
+        Y = sc.nextInt();
+        W = sc.nextInt();
+        sc.nextLine();
         /*
          * Write your code below.
          */
@@ -26,12 +29,6 @@ public class p000009A extends Solver {
         A /= nod;
         B /= nod;
         pw.println(A + "/" + B);
-    }
-    @Override
-    public void readInput() throws IOException {
-        Y = sc.nextInt();
-        W = sc.nextInt();
-        sc.nextLine();
     }
     static public void main(String[] args) throws IOException {
         new p000009A().run();

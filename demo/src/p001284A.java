@@ -18,17 +18,6 @@ public class p001284A extends Solver {
     String[] t;
     int q;
     int[] y;
-    @Override
-    protected void solve() {
-        /*
-         * Write your code below.
-         */
-        for (int i = 0; i < q; i++) {
-            String st = s[(y[i] - 1) % n] + t[(y[i] - 1) % m];
-            pw.println(st);
-        }
-    }
-    @Override
     public void readInput() throws IOException {
         n = sc.nextInt();
         m = sc.nextInt();
@@ -41,6 +30,13 @@ public class p001284A extends Solver {
         for(int _iy = 0; _iy < q; _iy++) {
             y[_iy] = sc.nextInt();
             sc.nextLine();
+        }
+        /*
+         * Write your code below.
+         */
+        for (int i = 0; i < q; i++) {
+            String st = s[(y[i] - 1) % n] + t[(y[i] - 1) % m];
+            pw.println(st);
         }
     }
     static public void main(String[] args) throws IOException {
