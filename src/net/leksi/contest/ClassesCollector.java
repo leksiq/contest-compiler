@@ -178,7 +178,7 @@ class ClassesCollector {
                     c = ' ';
                     sb.setCharAt(i, c);
                 }
-                if ((sym.indexOf(c) >= 0 || c == ' ') && c != '=' && c != '&' && c != '|' && c != '+' && c != '-' && c != '>' && c != '<' && strlen >= 80) {
+                if ((sym.indexOf(c) >= 0 || c == ' ') && c != '=' && c != '&' && c != '|' && c != '+' && c != '-' && c != '>' && c != '<' && c != ':' && strlen >= 80) {
                     strlen = 0;
                     sb.insert(i, '\n');
                     space = true;

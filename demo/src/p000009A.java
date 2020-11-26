@@ -13,10 +13,10 @@ public class p000009A extends Solver {
     /*
      * Generated from "iY,W".
      */
-    int Y;
-    int W;
     @Override
-    public void readInput() throws IOException {
+    public void solve() throws IOException {
+        int Y;
+        int W;
         Y = sc.nextInt();
         W = sc.nextInt();
         sc.nextLine();

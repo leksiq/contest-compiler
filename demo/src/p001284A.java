@@ -12,13 +12,13 @@ public class p001284A extends Solver {
     /*
      * Generated from "in,m/ss[]/st[]/iq/(q;iy/)".
      */
-    int n;
-    int m;
-    String[] s;
-    String[] t;
-    int q;
-    int[] y;
-    public void readInput() throws IOException {
+    public void solve() throws IOException {
+        int n;
+        int m;
+        String[] s;
+        String[] t;
+        int q;
+        int[] y;
         n = sc.nextInt();
         m = sc.nextInt();
         sc.nextLine();

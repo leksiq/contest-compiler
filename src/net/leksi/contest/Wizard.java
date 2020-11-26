@@ -388,8 +388,6 @@ public class Wizard {
                     append("        /*-Preprocess-DONOTCOPY*/\n");
         }
         sb1.append("    }\n");
-        sb2.append("    @Override\n");
-        sb2.append("    public void readInput() throws IOException {\n");
         
         int[] indention = new int[]{1};
         
@@ -585,22 +583,20 @@ public class Wizard {
         };
         
         reenter.process.accept(all_cycles.get(0));
-        sb1.append("    /*\n");
-        sb1.append("     * Generated from \"");
-        sb1.append(script);
-        sb1.append("\".\n");
-        sb1.append("     */\n");
-        sb1.append(all_cycles.get(0).sb_class);
-        sb1.append("    @Override\n");
-        sb1.append("    protected void solve() {\n");
-        sb1.append("        /*\n");
-        sb1.append("         * Write your code below.\n");
-        sb1.append("         */\n");
-        sb1.append("\n");
-        sb1.append("    }\n");
 
         sb1.append(all_cycles.stream().skip(1).filter(cy -> cy.simple == null).map(cy -> cy.sb_class).collect(Collectors.joining()));
+        sb1.append("    @Override\n");
+        sb1.append("    public void solve() throws IOException {\n");
+        String generated = "Generated from \"" + script + "\".";
+        String stars = String.format("%" + generated.length() + "s", "").replace(" ", "*");
+        sb1.append("        /*").append(stars).append("***/\n");
+        sb1.append("        /* ").append(generated).append(" */\n");
+        sb1.append("        /*").append(stars).append("***/\n");
+        sb1.append(all_cycles.get(0).sb_class.toString().replace("    ", "        "));
         sb1.append(sb2);
+        sb1.append("        /**************************/\n");
+        sb1.append("        /* Write your code below. */\n");
+        sb1.append("        /**************************/\n");
         sb1.append("    }\n");
         sb1.append("    static public void main(String[] args) throws IOException {\n");
         sb1.append("        new ").append(class_name).append("().run();\n");

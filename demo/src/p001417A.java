@@ -14,11 +14,11 @@ public class p001417A extends Solver {
     /*
      * Generated from "*in,k/ia[]".
      */
-    int n;
-    int k;
-    int[] a;
     @Override
-    public void readInput() throws IOException {
+    public void solve() throws IOException {
+        int n;
+        int k;
+        int[] a;
         n = sc.nextInt();
         k = sc.nextInt();
         sc.nextLine();

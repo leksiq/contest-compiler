@@ -99,14 +99,14 @@ public abstract class Solver {
                     pw.println("--- test ---");
                 }
                 /*-Preprocess-DONOTCOPY*/
-                readInput();
+                solve();
             }
         } else {
-            readInput();
+            solve();
         }
     }
     
-    abstract protected void readInput() throws IOException;
+    abstract protected void solve() throws IOException;
 
     protected int[] lineToIntArray() throws IOException {
         return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToInt(Integer::valueOf).toArray();
