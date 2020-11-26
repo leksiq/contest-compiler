@@ -32,9 +32,12 @@ import java.io.PrintWriter;
 import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -222,5 +225,136 @@ public abstract class Solver {
             return new PrintWriter(nameOut);
         }
         return new PrintWriter(System.out);
+    }
+    public static Map<Integer, List<Integer>> mapi(final int[] a) {
+        return IntStream.range(0, a.length).collect(
+            () -> new TreeMap<Integer, List<Integer>>(), 
+            (res, i) -> {
+                if(!res.containsKey(a[i])) {
+                    res.put(a[i], Stream.of(i).collect(Collectors.toList()));
+                } else {
+                    res.get(a[i]).add(i);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static Map<Long, List<Integer>> mapi(final long[] a) {
+        return IntStream.range(0, a.length).collect(
+            () -> new TreeMap<Long, List<Integer>>(), 
+            (res, i) -> {
+                if(!res.containsKey(a[i])) {
+                    res.put(a[i], Stream.of(i).collect(Collectors.toList()));
+                } else {
+                    res.get(a[i]).add(i);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static <T> Map<T, List<Integer>> mapi(final T[] a) {
+        return IntStream.range(0, a.length).collect(
+            () -> new TreeMap<T, List<Integer>>(), 
+            (res, i) -> {
+                if(!res.containsKey(a[i])) {
+                    res.put(a[i], Stream.of(i).collect(Collectors.toList()));
+                } else {
+                    res.get(a[i]).add(i);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static <T> Map<T, List<Integer>> mapi(final T[] a, Comparator<T> cmp) {
+        return IntStream.range(0, a.length).collect(
+            () -> new TreeMap<T, List<Integer>>(cmp), 
+            (res, i) -> {
+                if(!res.containsKey(a[i])) {
+                    res.put(a[i], Stream.of(i).collect(Collectors.toList()));
+                } else {
+                    res.get(a[i]).add(i);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static Map<Integer, List<Integer>> mapi(final IntStream a) {
+        int[] i = new int[]{0};
+        return a.collect(
+            () -> new TreeMap<Integer, List<Integer>>(), 
+            (res, v) -> {
+                if(!res.containsKey(v)) {
+                    res.put(v, Stream.of(i[0]).collect(Collectors.toList()));
+                } else {
+                    res.get(v).add(i[0]);
+                }
+                i[0]++;
+            }, 
+            Map::putAll
+        );
+    }
+    public static Map<Long, List<Integer>> mapi(final LongStream a) {
+        int[] i = new int[]{0};
+        return a.collect(
+            () -> new TreeMap<Long, List<Integer>>(), 
+            (res, v) -> {
+                if(!res.containsKey(v)) {
+                    res.put(v, Stream.of(i[0]).collect(Collectors.toList()));
+                } else {
+                    res.get(v).add(i[0]);
+                }
+                i[0]++;
+            }, 
+            Map::putAll
+        );
+    }
+    public static <T> Map<T, List<Integer>> mapi(final Stream<T> a, Comparator<T> cmp) {
+        int[] i = new int[]{0};
+        return a.collect(
+            () -> new TreeMap<T, List<Integer>>(cmp), 
+            (res, v) -> {
+                if(!res.containsKey(v)) {
+                    res.put(v, Stream.of(i[0]).collect(Collectors.toList()));
+                } else {
+                    res.get(v).add(i[0]);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static <T> Map<T, List<Integer>> mapi(final Stream<T> a) {
+        int[] i = new int[]{0};
+        return a.collect(
+            () -> new TreeMap<T, List<Integer>>(), 
+            (res, v) -> {
+                if(!res.containsKey(v)) {
+                    res.put(v, Stream.of(i[0]).collect(Collectors.toList()));
+                } else {
+                    res.get(v).add(i[0]);
+                }
+            }, 
+            Map::putAll
+        );
+    }
+    public static List<int[]> listi(final int[] a) {
+        return IntStream.range(0, a.length).mapToObj(i -> new int[]{a[i], i}).collect(Collectors.toList());
+    }
+    public static List<long[]> listi(final long[] a) {
+        return IntStream.range(0, a.length).mapToObj(i -> new long[]{a[i], i}).collect(Collectors.toList());
+    }
+    public static <T> List<Pair<T, Integer>> listi(final T[] a) {
+        return IntStream.range(0, a.length).mapToObj(i -> new Pair<T, Integer>(a[i], i)).collect(Collectors.toList());
+    }
+    public static List<int[]> listi(final IntStream a) {
+        int[] i = new int[]{0};
+        return a.mapToObj(v -> new int[]{v, i[0]++}).collect(Collectors.toList());
+    }
+    public static List<long[]> listi(final LongStream a) {
+        int[] i = new int[]{0};
+        return a.mapToObj(v -> new long[]{v, i[0]++}).collect(Collectors.toList());
+    }
+    public static <T> List<Pair<T, Integer>> listi(final Stream<T> a) {
+        int[] i = new int[]{0};
+        return a.map(v -> new Pair<T, Integer>(v, i[0]++)).collect(Collectors.toList());
     }
 }
