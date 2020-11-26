@@ -589,14 +589,14 @@ public class Wizard {
         sb1.append("    public void solve() throws IOException {\n");
         String generated = "Generated from \"" + script + "\".";
         String stars = String.format("%" + generated.length() + "s", "").replace(" ", "*");
-        sb1.append("        /*").append(stars).append("***\n");
+        sb1.append("        /*\n");
         sb1.append("         * ").append(generated).append(" *\n");
-        sb1.append("         *").append(stars).append("***/\n");
+        sb1.append("         */\n");
         sb1.append(all_cycles.get(0).sb_class.toString().replace("    ", "        "));
         sb1.append(sb2);
-        sb1.append("        /**************************\n");
+        sb1.append("        /*\n");
         sb1.append("         * Write your code below. *\n");
-        sb1.append("         **************************/\n");
+        sb1.append("         */\n");
         sb1.append("    }\n");
         sb1.append("    static public void main(String[] args) throws IOException {\n");
         sb1.append("        new ").append(class_name).append("().run();\n");
