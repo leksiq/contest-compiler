@@ -25,6 +25,7 @@ package net.leksi.contest;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,12 +38,15 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +58,7 @@ public class Wizard {
     static public void main(final String[] args) throws IOException {
         new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
-//        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/(m;il,r,x/)"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/{m;il,r,x/)"});
     }
 
     private static void usage() {
@@ -108,10 +112,15 @@ public class Wizard {
                     }
                 }
             }
-            System.out.println("latest: " + version[1]);
-            if(!version[1].equals(version[0])) {
+            System.out.println("latest release: " + version[1]);
+            int res = version[0].compareTo(version[1]);
+            if(res < 0) {
                 System.out.println("A newer version is released. To download visit:");
                 System.out.println("https://github.com/leksiq/java-contest-assistant/releases/download/" + version[1] + "/net.leksi.contest.assistant.jar");
+            } else if(res == 0) {
+                System.out.println("The latest release version is installed.");
+            } else {
+                System.out.println("Your version is not a release yet.");
             }
         } catch (IOException E) {
             System.out.println("error occured: " + E.toString());
@@ -139,6 +148,7 @@ public class Wizard {
         String class_name;
         int field_gen = 0;
         Variable simple = null;
+        boolean action = false;
         @Override
         public String toString() {
             return String.format("{C:%s;[%s]}", 
@@ -147,7 +157,7 @@ public class Wizard {
             );
         }
     }
-    static final String DELIMS = "/,;()[]";
+    static final String DELIMS = "/,;()[]{}";
     static final String TYPES = "ildst";
     
     Stack<Cycle> cycles = new Stack<>();
@@ -159,6 +169,7 @@ public class Wizard {
         String src = null;
         String in_dir = null;
         String in_name = null;
+        String outfile = null;
         String class_name = null;
         String script = null;
         boolean stdout = false;
@@ -178,6 +189,9 @@ public class Wizard {
                 } else if("-infile".equals(args[i])) {
                     i++;
                     in_name = args[i];
+                } else if("-outfile".equals(args[i])) {
+                    i++;
+                    outfile = args[i];
                 } else if("-stdout".equals(args[i])) {
                     stdout = true;
                 } else if("-force".equals(args[i])) {
@@ -229,6 +243,7 @@ public class Wizard {
         
         last_cycle = new Cycle();
         last_cycle.sb_class = new StringBuilder();
+        last_cycle.action = true;
         cycles.push(last_cycle);
         last_cycle.count = "";
         all_cycles.add(last_cycle);
@@ -246,7 +261,7 @@ public class Wizard {
             i++;
         }
         
-        String wf = TYPES + "(";
+        String wf = TYPES + "({";
         
         String type = null;
         boolean wait_for_name = false;
@@ -266,7 +281,7 @@ public class Wizard {
                     }
                     if(TYPES.indexOf(c) >= 0) {
                         type = String.valueOf(c);
-                        wf = "[/,;()";
+                        wf = "[/,;(){}";
                         wait_for_name = true;
                         wait_for_var = true;
                     } else {
@@ -277,18 +292,18 @@ public class Wizard {
                                 cycles.peek().variables.add(var);
                                 last_cycle = cycles.peek();
                                 var = null;
-                                wf = TYPES + "(" + (cycles.size() > 1 ? ")" : "");
+                                wf = TYPES + "({" + (cycles.size() > 1 ? ")}" : "");
                                 wait_for_name = false;
                                 break;
                             case ',':
                                 var = null;
-                                wf = "[/,;()";
+                                wf = "[/,;(){}";
                                 wait_for_name = true;
                                 wait_for_var = true;
                                 break;
                             case ';':
                                 var = null;
-                                wf = TYPES + "(";
+                                wf = TYPES + "({";
                                 wait_for_name = false;
                                 break;
                             case '[':
@@ -299,12 +314,14 @@ public class Wizard {
                                 wait_for_name = true;
                                 break;
                             case ']':
-                                wf = "/,;()";
+                                wf = "/,;(){}";
                                 wait_for_name = false;
                                 break;
                             case '(':
+                            case '{':
                                 last_cycle = new Cycle();
                                 last_cycle.parent = cycles.peek();
+                                last_cycle.action = c == '{';
                                 cycles.peek().variables.add(last_cycle);
                                 cycles.push(last_cycle);
                                 all_cycles.add(last_cycle);
@@ -313,9 +330,10 @@ public class Wizard {
                                 wait_for_name = true;
                                 break;
                             case ')':
+                            case '}':
                                 cycles.pop();
                                 var = null;
-                                wf = TYPES + "()";
+                                wf = TYPES + "(){}";
                                 wait_for_name = false;
                                 break;
                         }
@@ -369,6 +387,21 @@ public class Wizard {
         Reenter reenter = new Reenter();
 
         StringBuilder sb0 = new StringBuilder();
+        String banner = "!Please, Don't change or delete this comment!";
+        String script1 = "$script$:" + script;
+        int max_len = Math.max(script.length(), banner.length());
+        if(banner.length() < max_len) {
+            banner = String.format("%" + (max_len - banner.length()) / 2 + "s", "") + banner;
+            banner += String.format("%" + (max_len - banner.length()) + "s", "");
+        } else if(script1.length() < max_len) {
+            script1 = String.format("%" + (max_len - script1.length()) / 2 + "s", "") + script1;
+            script1 += String.format("%" + (max_len - script1.length()) + "s", "");
+        }
+        String stars = String.format("%" + max_len + "s", "").replace(" ", "*");
+        sb0.append("/*").append(stars).append("*/\n");
+        sb0.append("/*").append(banner).append("*/\n");
+        sb0.append("/*").append(script1).append("*/\n");
+        sb0.append("/*").append(stars).append("*/\n");
         if(pkg != null) {
             sb0.append("package ").append(pkg).append(";\n");
         }
@@ -378,7 +411,9 @@ public class Wizard {
         StringBuilder sb2 = new StringBuilder();
         sb1.append("public class ").append(class_name).append(" extends Solver {\n");
         sb1.append("    public ").append(class_name).append("() {\n");
-        sb1.append("        nameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n");
+        if(!stdout) {
+            sb1.append("        nameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n");
+        }
         if(singleTest[0]) {
             sb1.append("        singleTest = ").append(singleTest[0]).append(";\n");
         }
@@ -447,9 +482,17 @@ public class Wizard {
             }
         };
         
+        BiConsumer<String, StringBuilder> write_code = (ind, sb) -> {
+            sb.append(ind).append("/**************************/\n");
+            sb.append(ind).append("/* Write your code below. */\n");
+            sb.append(ind).append("/**************************/\n");
+            sb.append(ind).append("\n");
+            sb.append(ind).append("/**************************/\n");
+        };
+        
         reenter.process = (cycle) -> {
             String[] indent1 = new String[]{"    "};
-            if(cycle.parent != null && cycle.simple == null) {
+            if(cycle.parent != null && cycle.simple == null && !cycle.action) {
                 cycle.sb_class.append("    static class ").append(cycle.class_name).append(" {\n");
                 indent1[0] += indent1[0];
             }
@@ -468,7 +511,7 @@ public class Wizard {
                         if(vv.type.endsWith("[")) {
                             type1 += "[]";
                         }
-                        if(cycle.simple == null) {
+                        if(cycle.simple == null && !cycle.action) {
                             cycle.sb_class.append(indent1[0]).append(type1).append(" ").append(vv.name).append(";\n");
                         }
                         
@@ -481,6 +524,9 @@ public class Wizard {
                                 }
                             }
                             if(cycle.simple == null) {
+                                if(cycle.action) {
+                                    sb2.append(type1).append(" ");
+                                }
                                 sb2.append(vv.name);
                             }
                         }
@@ -511,9 +557,6 @@ public class Wizard {
                             } else {
                                 line_read[0] = true;
                                 if(vv.type.charAt(0) != 's') {
-                                    if(sb0.indexOf("java.util.Arrays") < 0) {
-                                        sb0.append("import java.util.Arrays;\n");
-                                    }
                                     sb2.append(" = lineTo").append(next).append("(").
                                             append(vv.type.charAt(0) == 'i' ? "Int" : next).append("Array()");
                                 } else {
@@ -539,44 +582,59 @@ public class Wizard {
                     }
                 } else {
                     Cycle cy = (Cycle)v;
-                    String field_name;
-                    if(!cy.variables.stream().anyMatch(v1 -> (v1 instanceof Cycle)) && cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).count() <= 1) {
-                        cy.simple = (Variable)cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).findFirst().get();
-                        field_name = cy.simple.name;
-                        cy.class_name = type2.apply(cy.simple.type);
-//                        cy.base = cycle.base;
-                    } else {
+                    String field_name = null;
+                    if(!cy.action) {
+                        if(!cy.variables.stream().anyMatch(v1 -> (v1 instanceof Cycle)) && cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).count() <= 1) {
+                            cy.simple = (Variable)cy.variables.stream().filter(v1 -> !"/".equals(((Variable)v1).type)).findFirst().get();
+                            field_name = cy.simple.name;
+                            cy.class_name = type2.apply(cy.simple.type);
+    //                        cy.base = cycle.base;
+                        } else {
+                            do {
+                                field_name = "f" + (cycle.field_gen++);
+                            } while (var_names.contains(field_name));
+                            cy.class_name = "Cy" + class_gen[0]++;
+                            cy.sb_class = new StringBuilder();
+                        }
+                        cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
+                        sb2.append(indent.get());
+                        if (cycle.base != null) {
+                            sb2.append(cycle.base).append(".");
+                        }
+                        sb2.append(field_name).append(" = new ").append(cy.class_name).append("[").append(cy.count).append("]");
+                        if (cy.simple != null && cy.simple.length != null) {
+                            sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
+                        }
+                        sb2.append(";\n");
+                    }
+                    if(field_name == null) {
                         do {
                             field_name = "f" + (cycle.field_gen++);
                         } while (var_names.contains(field_name));
-                        cy.class_name = "Cy" + class_gen[0]++;
-                        cy.sb_class = new StringBuilder();
                     }
-                    cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
-                    sb2.append(indent.get());
-                    if (cycle.base != null) {
-                        sb2.append(cycle.base).append(".");
+                    if(cy.action) {
+                        write_code.accept(indent.get(), sb2);
                     }
-                    sb2.append(field_name).append(" = new ").append(cy.class_name).append("[").append(cy.count).append("]");
-                    if(cy.simple != null && cy.simple.length != null) {
-                        sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
-                    }
-                    sb2.append(";\n");
                     sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; _i").
                             append(field_name).append(" < ").append(cy.count).append("; _i").append(field_name).append("++) {\n");
-                    if(cy.simple == null) {
+                    if(cy.simple == null && !cy.action) {
                         sb2.append(indent.get()).append("    ").append(field_name).append("[_i").append(field_name).append("").append("] = new ").append(cy.class_name).append("();\n");
                     }
                     reenter.process.accept(cy);
-                    sb2.append(indent.get()).append("}\n");
-                    cycle.sb_class.append(indent1[0]).append(cy.class_name);
-                    if(cy.simple != null && cy.simple.length != null) {
-                        cycle.sb_class.append("[]");
+                    if(cy.action) {
+                        write_code.accept(indent.get() + "    ", sb2);
                     }
-                    cycle.sb_class.append("[] ").append(field_name).append(";\n");
+                    sb2.append(indent.get()).append("}\n");
+                    if(!cycle.action) {
+                        cycle.sb_class.append(indent1[0]).append(cy.class_name);
+                        if(cy.simple != null && cy.simple.length != null) {
+                            cycle.sb_class.append("[]");
+                        }
+                        cycle.sb_class.append("[] ").append(field_name).append(";\n");
+                    }
                 }
             });
-            if(cycle.parent != null && cycle.simple == null) {
+            if(cycle.parent != null && cycle.simple == null && !cycle.action) {
                 cycle.sb_class.append("    ").append("}\n");
             }
             indention[0]--;
@@ -584,59 +642,158 @@ public class Wizard {
         
         reenter.process.accept(all_cycles.get(0));
 
-        sb1.append(all_cycles.stream().skip(1).filter(cy -> cy.simple == null).map(cy -> cy.sb_class).collect(Collectors.joining()));
+        sb1.append(all_cycles.stream().skip(1).filter(cy -> cy.simple == null && !cy.action).map(cy -> cy.sb_class).collect(Collectors.joining()));
         sb1.append("    @Override\n");
         sb1.append("    public void solve() throws IOException {\n");
         String generated = "Generated from \"" + script + "\".";
-        String stars = String.format("%" + generated.length() + "s", "").replace(" ", "*");
-        sb1.append("        /*\n");
-        sb1.append("         * ").append(generated).append(" *\n");
-        sb1.append("         */\n");
+        String stars1 = String.format("%" + generated.length() + "s", "").replace(" ", "*");
+        sb1.append("        /*").append(stars1).append("***/\n");
+        sb1.append("        /* ").append(generated).append(" */\n");
+        sb1.append("        /*").append(stars1).append("***/\n");
         sb1.append(all_cycles.get(0).sb_class.toString().replace("    ", "        "));
         sb1.append(sb2);
-        sb1.append("        /*\n");
-        sb1.append("         * Write your code below. *\n");
-        sb1.append("         */\n");
+        write_code.accept("        ", sb1);
+        int saved_code_pos = sb1.length();
         sb1.append("    }\n");
         sb1.append("    static public void main(String[] args) throws IOException {\n");
         sb1.append("        new ").append(class_name).append("().run();\n");
         sb1.append("    }\n");
         sb1.append("}\n");
         sb1.insert(0, sb0);
+        saved_code_pos += sb0.length();
         if(!stdout) {
-            File src_file = new File(src);
-            if(pkg != null) {
-                for(String part: pkg.split("\\.")) {
-                    src_file = new File(src_file, part);
+            File src_file = null;
+            if(outfile == null) {
+                src_file = new File(src);
+                if(pkg != null) {
+                    for(String part: pkg.split("\\.")) {
+                        src_file = new File(src_file, part);
+                    }
                 }
-            }
-    //        System.out.println(src_file);
-            if(!src_file.exists()) {
-                src_file.mkdirs();
-            }
-            src_file = new File(src_file, class_name + ".java");
-            if(!force && src_file.exists()) {
-                throw new IOException("File exists: " + src_file);
-            }
+        //        System.out.println(src_file);
+                if(!src_file.exists()) {
+                    src_file.mkdirs();
+                }
+                src_file = new File(src_file, class_name + ".java");
+                if(!force && src_file.exists()) {
+                    throw new IOException("File exists: " + src_file);
+                }
 
+                if(src_file.exists()) {
+                    File save = null;
+                    for(int j = 1; ; j++) {
+                        save = new File(src_file.getPath() + ";" + Integer.toString(j));
+                        if(!save.exists()) {
+                            break;
+                        }
+                    }
+                    src_file.renameTo(save);
+                    String script2 = null;
+                    try(
+                        FileReader fr = new FileReader(save);
+                        BufferedReader br = new BufferedReader(fr);
+                    ) {
+                        String line;
+                        while((line = br.readLine()) != null) {
+                            if(line.contains("$script$:")) {
+                                script2 = line.trim();
+                                script2 = script2.substring(script2.indexOf("/*"));
+                                script2 = script2.substring(0, script2.lastIndexOf("*/"));
+                                script2 = script2.trim();
+                                script2 = script2.substring(script2.indexOf("$script$:") + "$script$:".length());
+                                script2 = script2.trim();
+                                break;
+                            }
+                        }
+                    }
+                    if (script2 != null) {
+                        String[] args1 = new String[args.length + 2];
+                        System.arraycopy(args, 0, args1, 0, args.length);
+                        args1[args.length] = "-outfile";
+                        File tmp = File.createTempFile("temp", null);
+                        tmp.deleteOnExit();
+                        args1[args.length + 1] = tmp.getAbsolutePath();
+                        new Wizard().run(args1);
+                        sb2.delete(0, sb2.length());
+                        try (
+                                FileReader fr = new FileReader(save);
+                                BufferedReader br = new BufferedReader(fr);
+                                FileReader fr_tmp = new FileReader(tmp);
+                                BufferedReader br_tmp = new BufferedReader(fr_tmp);
+                        ) {
+                            String line;
+                            String line_tmp = null;
+                            boolean stopped = false;
+                            boolean stopped_tmp = false;
+                            ArrayList<String> saved_code = new ArrayList<>();
+                            while (!stopped) {
+                                if(!stopped_tmp) {
+                                    String line1 = br_tmp.readLine();
+                                    if(line1 == null) {
+                                        stopped_tmp = true;
+                                    } else {
+                                        if("".equals(line1.trim())) {
+                                            continue;
+                                        }
+                                        line_tmp = line1;
+                                    }
+                                }
+                                while(!stopped) {
+                                    String line1 = br.readLine();
+                                    if(line1 == null) {
+                                        stopped = true;
+                                        break;
+                                    }
+                                    line = line1;
+                                    if(line.trim().equals(line_tmp.trim())) {
+                                        if(sb2.length() > 0) {
+                                            saved_code.add(sb2.toString());
+                                            sb2.delete(0, sb2.length());
+                                        }
+                                        break;
+                                    }
+                                    sb2.append(line).append("\n");
+                                }
+                            }
+                            if(sb2.length() > 0) {
+                                saved_code.add(sb2.toString());
+                                sb2.delete(0, sb2.length());
+                            }
+                            for(int j = 0; j < saved_code.size(); j++) {
+                                sb2.append("\n");
+                                sb2.append("        /**** begin of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                sb2.append(saved_code.get(j));
+                                sb2.append("        /**** end of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                sb2.append("\n");
+                            }
+                            if(sb2.length() > 0) {
+                                sb1.insert(saved_code_pos, sb2.toString());
+                            }
+                        }
+                    }
+                }
+
+                File in_file = new File(in_dir);
+                if(!in_file.exists()) {
+                    in_file.mkdirs();
+                }
+                in_file = new File(in_dir, in_name);
+                if(!in_file.exists()) {
+                    try (
+                        FileWriter fw = new FileWriter(in_file);
+                    ) {
+                        fw.write("");
+                    }
+                }
+            } else {
+                src_file = new File(outfile);
+            }
             try (
                 FileWriter fw = new FileWriter(src_file);
             ) {
                 fw.write(sb1.toString());
             }
-            
-            File in_file = new File(in_dir);
-            if(!in_file.exists()) {
-                in_file.mkdirs();
-            }
-            in_file = new File(in_dir, in_name);
-            if(!in_file.exists()) {
-                try (
-                    FileWriter fw = new FileWriter(in_file);
-                ) {
-                    fw.write("");
-                }
-            }
+
         } else {
             System.out.println(sb1);
         }
