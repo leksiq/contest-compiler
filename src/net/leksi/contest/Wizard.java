@@ -557,8 +557,7 @@ public class Wizard {
                             } else {
                                 line_read[0] = true;
                                 if(vv.type.charAt(0) != 's') {
-                                    sb2.append(" = lineTo").append(next).append("(").
-                                            append(vv.type.charAt(0) == 'i' ? "Int" : next).append("Array()");
+                                    sb2.append(" = lineTo").append(next).append("Array()");
                                 } else {
                                     sb2.append(" = sc.nextLine().trim().split(\"\\\\s+\")");
                                 }
@@ -645,11 +644,6 @@ public class Wizard {
         sb1.append(all_cycles.stream().skip(1).filter(cy -> cy.simple == null && !cy.action).map(cy -> cy.sb_class).collect(Collectors.joining()));
         sb1.append("    @Override\n");
         sb1.append("    public void solve() throws IOException {\n");
-        String generated = "Generated from \"" + script + "\".";
-        String stars1 = String.format("%" + generated.length() + "s", "").replace(" ", "*");
-        sb1.append("        /*").append(stars1).append("***/\n");
-        sb1.append("        /* ").append(generated).append(" */\n");
-        sb1.append("        /*").append(stars1).append("***/\n");
         sb1.append(all_cycles.get(0).sb_class.toString().replace("    ", "        "));
         sb1.append(sb2);
         write_code.accept("        ", sb1);
@@ -708,7 +702,13 @@ public class Wizard {
                     }
                     if (script2 != null) {
                         String[] args1 = new String[args.length + 2];
-                        System.arraycopy(args, 0, args1, 0, args.length);
+                        for(int j = 0; j < args.length; j++) {
+                            if(args[j].equals(script)) {
+                                args1[j] = script2;
+                            } else {
+                                args1[j] = args[j];
+                            }
+                        }
                         args1[args.length] = "-outfile";
                         File tmp = File.createTempFile("temp", null);
                         tmp.deleteOnExit();

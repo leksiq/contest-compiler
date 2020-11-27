@@ -601,7 +601,6 @@ class Preprocessor {
                                 }
                             }
                             String imp = tokens.subList(i, j + 1).stream().map(v -> v.startsWith("?") || v.startsWith("!") ? v.substring(1) : v).collect(Collectors.joining());
-                            System.out.println(imp);
                             imports.add(imp);
                             i = j;
                         } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) && ("?" + classname).equals(tokens.get(i + 1)))) {
