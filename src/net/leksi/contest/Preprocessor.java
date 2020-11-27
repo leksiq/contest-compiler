@@ -553,7 +553,6 @@ class Preprocessor {
             first[0] = true;
             StringBuilder sb = new StringBuilder();
             TreeSet<String> imports = new TreeSet<>();
-            ClassesCollector cc = new ClassesCollector();
             StringBuilder sb1 = new StringBuilder();
             String underline = "";
             int[] line_length = new int[]{0};
