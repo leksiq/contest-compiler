@@ -556,6 +556,7 @@ class Preprocessor {
             ClassesCollector cc = new ClassesCollector();
             StringBuilder sb1 = new StringBuilder();
             String underline = "";
+            int[] line_length = new int[]{0};
             while(java != null) {
                 probed_paths.clear();
                 File fJava = new File(java);
@@ -588,7 +589,92 @@ class Preprocessor {
                 ) {
                     String classname = java.substring(0, java.indexOf(".java")).replace("/", ".");
                     List<String> tokens = tokenizer.tokenize(isr);
-                    compress(tokens, sb1);
+                    boolean isAbstract = false;
+                    boolean class_started = false;
+                    boolean doNotCopy = false;
+                    line_length[0] = 0;
+                    for(int i = 0; i < tokens.size(); i++) {
+                        if("?import".equals(tokens.get(i))) {
+                            int j = i;
+                            for(; j < tokens.size(); j++) {
+                                if("!;".equals(tokens.get(j))) {
+                                    break;
+                                }
+                            }
+                            String imp = tokens.subList(i, j + 1).stream().map(v -> v.startsWith("?") || v.startsWith("!") ? v.substring(1) : v).collect(Collectors.joining());
+                            System.out.println(imp);
+                            imports.add(imp);
+                            i = j;
+                        } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) && ("?" + classname).equals(tokens.get(i + 1)))) {
+                            sb1.append("static private ");
+                            line_length[0] += "static private ".length();
+                            if(isAbstract) {
+                                sb1.append("abstract ");
+                                line_length[0] += "abstract ".length();
+                            }
+                            sb1.append(tokens.get(i).substring(1));
+                            line_length[0] += tokens.get(i).length() - 1;
+                            class_started = true;
+                        } else if("?abstract".equals(tokens.get(i))) {
+                            if(!class_started) {
+                                isAbstract = true;
+                            } else if(!doNotCopy) {
+                                sb1.append(tokens.get(i).substring(1));
+                                line_length[0] += tokens.get(i).length() - 1;
+                            }
+                        } else  {
+                            if(" ".equals(tokens.get(i)) || tokens.get(i).startsWith("!/*") || tokens.get(i).startsWith("!//")) {
+                                boolean remove_token = false;
+                                if(i > 0 && tokens.get(i - 1).startsWith("!") || i < tokens.size() - 1 && tokens.get(i + 1).startsWith("!")) {
+                                    // skip space or comment
+                                    remove_token = true;
+                                } else if(class_started && !doNotCopy) {
+                                    // insert space in place of space or comment
+                                    sb1.append(" ");
+                                    line_length[0]++;
+                                }
+                                if("!/*+Preprocess-DONOTCOPY*/".equals(tokens.get(i))) {
+                                    doNotCopy = true;
+                                } else if("!/*-Preprocess-DONOTCOPY*/".equals(tokens.get(i))) {
+                                    doNotCopy = false;
+                                }
+                                if(remove_token) {
+                                    tokens.remove(i);
+                                    i--;
+                                }
+                            } else if(class_started && !doNotCopy) {
+                                sb1.append(tokens.get(i).substring(1));
+                                line_length[0] += tokens.get(i).length() - 1;
+                            }
+                        }
+                        if(line_length[0] >= 80) {
+                            sb1.append("\n");
+                            line_length[0] = 0;
+                        }
+                    }
+                    if (first[0]) {
+                        Matcher matcher = pMain.matcher(sb1);
+                        if (matcher.find()) {
+                            int pos = matcher.start(1);
+                            int underlines = 1;
+                            matcher = pMain1.matcher(sb1);
+                            while (matcher.find()) {
+                                if (matcher.end(1) - matcher.start(1) > underlines + "main".length()) {
+                                    underlines = matcher.end(1) - matcher.start(1) - "main".length() + 1;
+                                }
+                            }
+                            underline = String.format("%" + underlines + "s", "").replace(" ", "_");
+                            sb1.insert(pos, underline);
+                        }
+                        new_java = src.file.toString().replace("\\", "/");
+                        if (new_java.contains("/")) {
+                            new_java = new_java.substring(0, new_java.lastIndexOf("/") + 1) + "_" + new_java.substring(new_java.lastIndexOf("/") + 1);
+                        } else {
+                            new_java = "_" + new_java;
+                        }
+                        main_class = classname;
+                        main_package = main_class.contains(".") ? main_class.substring(0, main_class.lastIndexOf(".")) : null;
+                    }
                 }
                 sb.append(sb1).append("\n").append("//end ").append(java.replace("\\", "\\\\")).append("\n");
                 java = sources.pollFirst();
@@ -598,19 +684,44 @@ class Preprocessor {
             if(main_package != null) {
                 sb1.append("package ").append(main_package).append(";\n");
             }
+            line_length[0] = 0;
             imports.stream().filter(v -> {
                 String cl = v.substring(v.indexOf("import") + "import".length()).trim();
                 cl = cl.substring(0, cl.indexOf(";"));
                 return !decompiledClasses.contains(cl) && sb.toString().contains(cl.substring(cl.lastIndexOf(".") + 1));
-            }).forEach(v -> sb1.append(v).append("\n"));
-            sb1.append("public class _").append(main_class).append(" {\n");
-            sb1.append("    static public void main(final String[] args) ");
-            if(!main_exceptions.isEmpty()) {
-                sb1.append("throws ").append(main_exceptions.stream().map(v -> v.substring(v.lastIndexOf(".") + 1)).collect(Collectors.joining(", ")));
+            }).forEach(v -> {
+                v = v.trim();
+                sb1.append(v);
+                line_length[0] += v.length();
+                if (line_length[0] >= 80) {
+                    sb1.append("\n");
+                    line_length[0] = 0;
+                }
+            });
+            int l = sb1.length();
+            sb1.append("public class _").append(main_class).append(" {");
+            line_length[0] += sb1.length() - l;
+            if (line_length[0] >= 80) {
+                sb1.append("\n");
+                line_length[0] = 0;
             }
-            sb1.append(" {\n");
-            sb1.append("        ").append(main_class).append(".").append(underline).append("main(args);\n");
-            sb1.append("    }\n");
+            l = sb1.length();
+            sb1.append("static public void main(final String[] args) ");
+            line_length[0] += sb1.length() - l;
+            if (line_length[0] >= 80) {
+                sb1.append("\n");
+                line_length[0] = 0;
+            }
+            if(!main_exceptions.isEmpty()) {
+                l = sb1.length();
+                sb1.append("throws ").append(main_exceptions.stream().map(v -> v.substring(v.lastIndexOf(".") + 1)).collect(Collectors.joining(",")));
+                line_length[0] += sb1.length() - l;
+                if (line_length[0] >= 80) {
+                    sb1.append("\n");
+                    line_length[0] = 0;
+                }
+            }
+            sb1.append("{").append(main_class).append(".").append(underline).append("main(args);}\n");
             
             sb.insert(0, sb1);
             sb.append("}\n");
@@ -626,8 +737,4 @@ class Preprocessor {
         }
     }
 
-    private void compress(List<String> tokens, StringBuilder sb1) {
-        tokens.forEach(t -> sb1.append(t));
-    }
-    
 }

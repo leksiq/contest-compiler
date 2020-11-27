@@ -42,7 +42,7 @@ public class Tokenizer {
         grammar.put((int)':', new String[]{"::", ":"});
         grammar.put((int)'=', new String[]{"==", "="});
         grammar.put((int)'+', new String[]{"++", "+=", "+"});
-        grammar.put((int)'-', new String[]{"--", "-=", "-"});
+        grammar.put((int)'-', new String[]{"--", "-=", "->", "-"});
         grammar.put((int)'*', new String[]{"*=", "*/", "*"});
         grammar.put((int)'%', new String[]{"%=", "%"});
         grammar.put((int)'<', new String[]{"<<=", "<<", "<=", "<"});
@@ -59,6 +59,8 @@ public class Tokenizer {
     }
     
     String comment = null;
+    char quote = '\0';
+    int escaped = 0;
     
     ArrayList<String> tokens = new ArrayList<>();
     
@@ -77,68 +79,75 @@ public class Tokenizer {
                 int read = 0;
 //                System.out.println("char:'" + buf[0] + "' (" + (int)buf[0] + ")");
                 if(grammar.containsKey((int)buf[0])) {
-                    String[] ss = grammar.get((int)buf[0]);
-                    if(ss[0].length() - buf_end > 0) {
-                        int n = r.read(buf, buf_end, ss[0].length() - buf_end);
-                        if(n < 0) {
-                            break;
+                    if(quote == '\0') {
+                        String[] ss = grammar.get((int)buf[0]);
+                        if(ss[0].length() - buf_end > 0) {
+                            int n = r.read(buf, buf_end, ss[0].length() - buf_end);
+                            if(n < 0) {
+                                break;
+                            }
+                            buf_end += n;
                         }
-                        buf_end += n;
-                    }
-                    int pos = 0;
-                    String s1 = String.valueOf(buf, 0, buf_end);
-                    for(; pos < ss.length; pos++) {
-                        if(s1.substring(0, ss[pos].length()).equals(ss[pos])) {
-                            break;
+                        int pos = 0;
+                        String s1 = String.valueOf(buf, 0, buf_end);
+                        for(; pos < ss.length; pos++) {
+                            if(s1.substring(0, ss[pos].length()).equals(ss[pos])) {
+                                break;
+                            }
                         }
-                    }
-                    if(comment == null) {
-                        if(pos == ss.length) {
-                            throw new RuntimeException("unexpected char: '" + buf[0] + "'");
-                        }
-                        read = ss[pos].length();
-                        if(token.length() > 0) {
-                            onToken(token.toString());
-                            token.delete(0, token.length());
-                        }
-                        if("/*".equals(ss[pos])) {
-                            comment = "*/";
-                            token.append(ss[pos]);
-                        } else if("//".equals(ss[pos])) {
-                            comment = "\n";
-                            token.append(ss[pos]);
+                        if(comment == null) {
+                            if(pos == ss.length) {
+                                throw new RuntimeException("unexpected char: '" + buf[0] + "'");
+                            }
+                            read = ss[pos].length();
+                            if(token.length() > 0) {
+                                onToken(false, token.toString());
+                                token.delete(0, token.length());
+                            }
+                            if("/*".equals(ss[pos])) {
+                                comment = "*/";
+                                token.append(ss[pos]);
+                            } else if("//".equals(ss[pos])) {
+                                comment = "\n";
+                                token.append(ss[pos]);
+                            } else {
+                                onToken(true, ss[pos]);
+                            }
                         } else {
-                            onToken(ss[pos]);
+                            if(pos < ss.length && comment.equals(ss[pos])) {
+                                read = ss[pos].length();
+                                token.append(ss[pos]);
+                                comment = null;
+                                onToken(true, token.toString());
+                                token.delete(0, token.length());
+                            } else {
+                                token.append(buf[0]);
+                                read = 1;
+                            }
                         }
                     } else {
-                        if(pos < ss.length && comment.equals(ss[pos])) {
-                            read = ss[pos].length();
-                            token.append(ss[pos]);
-                            comment = null;
-                            onToken(token.toString());
-                            token.delete(0, token.length());
-                        } else {
-                            token.append(buf[0]);
-                            read = 1;
-                        }
+                        token.append(buf[0]);
+                        read = 1;
                     }
                 } else {
                     if(buf[0] == ' ' || buf[0] == '\t' || buf[0] == '\n' || buf[0] == '\r') {
                         if(comment != null) {
                             if(buf[0] == comment.charAt(0)) {
                                 comment = null;
-                                onToken(token.toString());
+                                onToken(false, token.toString());
                                 token.delete(0, token.length());
                                 token.append(" ");
                             } else {
                                 token.append(buf[0]);
                             }
+                        } else if(quote != '\0') {
+                                token.append(buf[0]);
                         } else {
                             if(token.length() > 0) {
                                 if(token.length() == 1 && token.charAt(0) == ' ') {
                                     // 
                                 } else {
-                                    onToken(token.toString());
+                                    onToken(false, token.toString());
                                     token.delete(0, token.length());
                                     token.append(" ");
                                 }
@@ -147,7 +156,31 @@ public class Tokenizer {
                             }
                         }
                     } else {
-                        token.append(buf[0]);
+                        if(quote != '\0') {
+                            if(quote == buf[0] && escaped % 2 == 0) {
+                                token.append(buf[0]);
+                                onToken(true, token.toString());
+                                token.delete(0, token.length());
+                                quote = '\0';
+                            } else {
+                                token.append(buf[0]);
+                                if(buf[0] == '\\') {
+                                    escaped++;
+                                }
+                            }
+                        } else {
+                            if(comment == null && (buf[0] == '"' || buf[0] == '\'')) {
+                                quote = buf[0];
+                                if(token.length() > 0) {
+                                    onToken(false, token.toString());
+                                    token.delete(0, token.length());
+                                }
+                            } else if(token.length() == 1 && token.charAt(0) == ' ') {
+                                onToken(false, token.toString());
+                                token.delete(0, token.length());
+                            }
+                            token.append(buf[0]);
+                        }
                     }
                     read = 1;
                 }
@@ -161,20 +194,20 @@ public class Tokenizer {
             }
         }
         if(token.length() > 0) {
-            onToken(token.toString());
+            onToken(false, token.toString());
             token.delete(0, token.length());
         }
         return tokens.stream().collect(Collectors.toList());
     }
     
     public static void main(String[] args) throws IOException {
-        args = new String[]{"F:\\leksi\\YandexDisk\\Java8\\SE\\net.leksi.contest.assistant\\src\\net\\leksi\\contest\\Solver.java"};
+        args = new String[]{"F:\\leksi\\contests\\codeforces.com\\archive_problems\\src\\900\\p001080C.java"};
         try(FileReader r = new FileReader(args[0]);) {
-            new Tokenizer().tokenize(r);
+            System.out.println(new Tokenizer().tokenize(r).stream().map(t -> " ".equals(t) ? "__SPACE__" : t).collect(Collectors.joining("\n")));
         }
     }
 
-    private void onToken(String token) {
-        tokens.add(token);
+    private void onToken(boolean strong, String token) {
+        tokens.add(" ".equals(token) ? " " : (strong ? "!" : "?") + token);
     }
 }
