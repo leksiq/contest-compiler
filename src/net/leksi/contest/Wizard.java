@@ -676,7 +676,7 @@ public class Wizard {
                 }
                 src_file = new File(src_file, class_name + ".java");
                 if(!force && src_file.exists()) {
-                    throw new IOException("File exists: " + src_file);
+                    throw new IOException("File exists: " + src_file + "! Use -force to overwrite.");
                 }
 
                 if(src_file.exists()) {
