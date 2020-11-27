@@ -37,6 +37,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Preprocessor {
-    
+
     enum WaitingFor {COMPILED, CLASS, METHOD_OR_FIELD, METHOD, FIELD, CODE, OPER, EXCEPTION_TABLE, TABLE_SWITCH, LOOKUP_SWITCH, DONE, NONE};
     
     static final String TOKENIZER = "\\s+|,|<|>|\\[|\\]|&|:";
@@ -149,6 +150,8 @@ class Preprocessor {
         Predicate<String> used =  s -> {
             return foundClasses.contains(s) || touched.contains(s);
         };
+        
+        Tokenizer tokenizer = new Tokenizer();
         
         class Walker {
             BinaryOperator<File> find;
@@ -582,35 +585,11 @@ class Preprocessor {
                 try (
                     InputStream is = src.file != null ? new FileInputStream(src.file) : src.jarFile.getInputStream(src.jarEntry);
                     InputStreamReader isr = new InputStreamReader(is);
-                    BufferedReader br = new BufferedReader(isr);
                 ) {
                     String classname = java.substring(0, java.indexOf(".java")).replace("/", ".");
-                    cc.collectClass(br, sb1, null, imports, classname.contains(".") ? classname.substring(classname.lastIndexOf(".") + 1) : classname);
-                    if(first[0]) {
-                        Matcher matcher = pMain.matcher(sb1);
-                        if(matcher.find()) {
-                            int pos = matcher.start(1);
-                            int underlines = 1;
-                            matcher = pMain1.matcher(sb1);
-                            while(matcher.find()) {
-                                if(matcher.end(1) - matcher.start(1) > underlines + "main".length()) {
-                                    underlines = matcher.end(1) - matcher.start(1) - "main".length() + 1;
-                                }
-                            }
-                            underline = String.format("%" + underlines + "s", "").replace(" ", "_");
-                            sb1.insert(pos, underline);
-                        }
-                        new_java = src.file.toString().replace("\\", "/");
-                        if(new_java.contains("/")) {
-                            new_java = new_java.substring(0, new_java.lastIndexOf("/") + 1) + "_" + new_java.substring(new_java.lastIndexOf("/") + 1);
-                        } else {
-                            new_java = "_" + new_java;
-                        }                        
-                        main_class = classname;
-                        main_package = main_class.contains(".") ? main_class.substring(0, main_class.lastIndexOf(".")) : null;
-                    }
+                    List<String> tokens = tokenizer.tokenize(isr);
+                    compress(tokens, sb1);
                 }
-                cc.compress(sb1);
                 sb.append(sb1).append("\n").append("//end ").append(java.replace("\\", "\\\\")).append("\n");
                 java = sources.pollFirst();
                 first[0] = false;
@@ -646,4 +625,9 @@ class Preprocessor {
             System.err.println("Failed: " + ex);
         }
     }
+
+    private void compress(List<String> tokens, StringBuilder sb1) {
+        tokens.forEach(t -> sb1.append(t));
+    }
+    
 }

@@ -57,8 +57,8 @@ public abstract class Solver {
     protected Scanner sc = null;
     protected PrintWriter pw = null;
     
-    final String SPACE = " ";
-    final String SPACES = "\\s+";
+    final static String SPACE = " ";
+    final static String SPACES = "\\s+";
     
     /*+Preprocess-DONOTCOPY*/
     
@@ -286,67 +286,67 @@ public abstract class Solver {
         int[] i = new int[]{0};
         return a.map(v -> new Pair<T, Integer>(v, i[0]++)).collect(Collectors.toList());
     }
-    protected String join(final int[] a) {
+    public static String join(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
     }
     
-    protected String join(final long[] a) {
+    public static String join(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::toString).collect(Collectors.joining(SPACE));
     }
     
-    protected <T> String join(final T[] a) {
+    public static <T> String join(final T[] a) {
         return Arrays.stream(a).map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final T[] a, final Function<T,String> toString) {
+    public static <T> String join(final T[] a, final Function<T,String> toString) {
         return Arrays.stream(a).map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final Collection<T> a) {
+    public static <T> String join(final Collection<T> a) {
         return a.stream().map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final Collection<T> a, final Function<T,String> toString) {
+    public static <T> String join(final Collection<T> a, final Function<T,String> toString) {
         return a.stream().map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final Stream<T> a) {
+    public static <T> String join(final Stream<T> a) {
         return a.map(v -> Objects.toString(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final Stream<T> a, final Function<T,String> toString) {
+    public static <T> String join(final Stream<T> a, final Function<T,String> toString) {
         return a.map(v -> toString.apply(v)).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final IntStream a) {
+    public static <T> String join(final IntStream a) {
         return a.mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
     }
 
-    protected <T> String join(final LongStream a) {
+    public static <T> String join(final LongStream a) {
         return a.mapToObj(Long::toString).collect(Collectors.joining(SPACE));
     }
 
-    protected List<Integer> list(final int[] a) {
+    public static List<Integer> list(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::valueOf).collect(Collectors.toList());
     }
 
-    protected List<Integer> list(final IntStream a) {
+    public static List<Integer> list(final IntStream a) {
         return a.mapToObj(Integer::valueOf).collect(Collectors.toList());
     }
 
-    protected List<Long> list(final long[] a) {
+    public static List<Long> list(final long[] a) {
         return Arrays.stream(a).mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
-    protected List<Long> list(final LongStream a) {
+    public static List<Long> list(final LongStream a) {
         return a.mapToObj(Long::valueOf).collect(Collectors.toList());
     }
 
-    protected <T> List<T> list(final Stream<T> a) {
+    public static <T> List<T> list(final Stream<T> a) {
         return a.collect(Collectors.toList());
     }
 
-    protected <T> List<T> list(final T[] a) {
+    public static <T> List<T> list(final T[] a) {
         return Arrays.stream(a).collect(Collectors.toList());
     }
 
