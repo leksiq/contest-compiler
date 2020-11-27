@@ -134,7 +134,7 @@ public class Tokenizer {
                         if(comment != null) {
                             if(buf[0] == comment.charAt(0)) {
                                 comment = null;
-                                onToken(false, token.toString());
+                                onToken(true, token.toString());
                                 token.delete(0, token.length());
                                 token.append(" ");
                             } else {
@@ -201,7 +201,7 @@ public class Tokenizer {
     }
     
     public static void main(String[] args) throws IOException {
-        args = new String[]{"F:\\leksi\\contests\\codeforces.com\\archive_problems\\src\\900\\p001080C.java"};
+        args = new String[]{"test/1.txt"};
         try(FileReader r = new FileReader(args[0]);) {
             System.out.println(new Tokenizer().tokenize(r).stream().map(t -> " ".equals(t) ? "__SPACE__" : t).collect(Collectors.joining("\n")));
         }
