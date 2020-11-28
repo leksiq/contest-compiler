@@ -581,7 +581,7 @@ class Preprocessor {
                     throw new IOException("source file not found: " + java);
                 }
                 sb1.delete(0, sb1.length());
-                sb.append("//begin ").append(java.replace("\\", "\\\\")).append("\n");
+//                sb.append("//begin ").append(java.replace("\\", "\\\\")).append("\n");
                 try (
                     InputStream is = src.file != null ? new FileInputStream(src.file) : src.jarFile.getInputStream(src.jarEntry);
                     InputStreamReader isr = new InputStreamReader(is);
@@ -591,7 +591,7 @@ class Preprocessor {
                     boolean isAbstract = false;
                     boolean class_started = false;
                     boolean doNotCopy = false;
-                    line_length[0] = 0;
+//                    line_length[0] = 0;
                     for(int i = 0; i < tokens.size(); i++) {
                         if("?import".equals(tokens.get(i))) {
                             int j = i;
@@ -674,7 +674,8 @@ class Preprocessor {
                         main_package = main_class.contains(".") ? main_class.substring(0, main_class.lastIndexOf(".")) : null;
                     }
                 }
-                sb.append(sb1).append("\n").append("//end ").append(java.replace("\\", "\\\\")).append("\n");
+                sb.append(sb1);
+//                sb.append("\n").append("//end ").append(java.replace("\\", "\\\\")).append("\n");
                 java = sources.pollFirst();
                 first[0] = false;
             } 
@@ -719,7 +720,13 @@ class Preprocessor {
                     line_length[0] = 0;
                 }
             }
+            l = sb1.length();
             sb1.append("{").append(main_class).append(".").append(underline).append("main(args);}\n");
+            line_length[0] += sb1.length() - l;
+            if (line_length[0] >= 80) {
+                sb1.append("\n");
+                line_length[0] = 0;
+            }
             
             sb.insert(0, sb1);
             sb.append("}\n");

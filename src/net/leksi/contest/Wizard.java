@@ -746,7 +746,7 @@ public class Wizard {
                                     }
                                     line = line1;
                                     if(line.trim().equals(line_tmp.trim())) {
-                                        if(sb2.length() > 0) {
+                                        if(sb2.toString().trim().length() > 0) {
                                             saved_code.add(sb2.toString());
                                             sb2.delete(0, sb2.length());
                                         }
