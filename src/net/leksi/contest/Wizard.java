@@ -45,8 +45,6 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -333,7 +331,7 @@ public class Wizard {
                             case '}':
                                 cycles.pop();
                                 var = null;
-                                wf = TYPES + "(){}";
+                                wf = TYPES + "(){}/";
                                 wait_for_name = false;
                                 break;
                         }
@@ -533,7 +531,7 @@ public class Wizard {
                         if(vv.length != null) {
                             String count =  find_variable.apply(cycle, vv);
                             if(!"".equals(vv.length)) {
-                                if(cycle.simple == null || vv.length == null && "".equals(vv.length)) {
+                                if(cycle.simple == null || vv.length == null) {
                                     sb2.append(" = new ").append(type1.replace("[]", "")).append("[");
                                     sb2.append(count).append("]").append(";\n");
                                 }
@@ -595,8 +593,18 @@ public class Wizard {
                             cy.class_name = "Cy" + class_gen[0]++;
                             cy.sb_class = new StringBuilder();
                         }
-                        cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
                         sb2.append(indent.get());
+                        String type1 = cy.simple != null ? type2.apply(cy.simple.type) : cy.class_name;
+                        if ("Token".equals(type1)) {
+                            type1 = "String";
+                        }
+                        type1 += "[]";
+                        sb2.append(type1);
+                        if(cy.simple != null && cy.simple.length != null) {
+                            sb2.append("[]");
+                        }
+                        sb2.append(" ");
+                        cy.base = (cycle.base != null ? cycle.base + "." : "") + field_name + "[" + "_i" + field_name + "]";
                         if (cycle.base != null) {
                             sb2.append(cycle.base).append(".");
                         }
@@ -755,7 +763,7 @@ public class Wizard {
                                     sb2.append(line).append("\n");
                                 }
                             }
-                            if(sb2.length() > 0) {
+                            if(sb2.toString().trim().length() > 0) {
                                 saved_code.add(sb2.toString());
                                 sb2.delete(0, sb2.length());
                             }

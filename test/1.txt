@@ -1,6 +1,1 @@
-
-!==/* sdkasdljasda
-dasdsada
-das
-asdsd *   */
-<<<=    //jopa s dupa
+double a = 1.0;

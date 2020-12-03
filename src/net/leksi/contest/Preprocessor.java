@@ -592,6 +592,7 @@ class Preprocessor {
                     boolean class_started = false;
                     boolean doNotCopy = false;
 //                    line_length[0] = 0;
+//                    System.out.println(tokens);
                     for(int i = 0; i < tokens.size(); i++) {
                         if("?import".equals(tokens.get(i))) {
                             int j = i;
@@ -604,8 +605,12 @@ class Preprocessor {
                             imports.add(imp);
                             i = j;
                         } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) && ("?" + classname).equals(tokens.get(i + 1)))) {
-                            sb1.append("static private ");
-                            line_length[0] += "static private ".length();
+                            if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
+                                sb1.append("static ");
+                                line_length[0] += "static ".length();
+                            }
+                            sb1.append("private ");
+                            line_length[0] += "private ".length();
                             if(isAbstract) {
                                 sb1.append("abstract ");
                                 line_length[0] += "abstract ".length();
@@ -640,15 +645,19 @@ class Preprocessor {
                                     tokens.remove(i);
                                     i--;
                                 }
+                                if(line_length[0] >= 80) {
+                                    sb1.append("\n");
+                                    line_length[0] = 0;
+                                }
                             } else if(class_started && !doNotCopy) {
                                 sb1.append(tokens.get(i).substring(1));
                                 line_length[0] += tokens.get(i).length() - 1;
                             }
                         }
-                        if(line_length[0] >= 80) {
-                            sb1.append("\n");
-                            line_length[0] = 0;
-                        }
+//                        if(line_length[0] >= 80) {
+//                            sb1.append("\n");
+//                            line_length[0] = 0;
+//                        }
                     }
                     if (first[0]) {
                         Matcher matcher = pMain.matcher(sb1);
@@ -732,6 +741,9 @@ class Preprocessor {
             sb.append("}\n");
             
             try(FileWriter fw = new FileWriter(new_java)) {
+                if(debug) {
+                    System.out.println("Saving: " + new_java);
+                }
                 fw.write(sb.toString());
             }
         } catch (IOException e) {

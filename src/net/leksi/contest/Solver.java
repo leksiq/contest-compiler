@@ -108,12 +108,16 @@ public abstract class Solver {
     
     abstract protected void solve() throws IOException;
 
+    protected String[] lineToArray() throws IOException {
+        return sc.nextLine().trim().split(SPACES);
+    }
+
     protected int[] lineToIntArray() throws IOException {
-        return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToInt(Integer::valueOf).toArray();
+        return Arrays.stream(lineToArray()).mapToInt(Integer::valueOf).toArray();
     }
 
     protected long[] lineToLongArray() throws IOException {
-        return Arrays.stream(sc.nextLine().trim().split(SPACES)).mapToLong(Long::valueOf).toArray();
+        return Arrays.stream(lineToArray()).mapToLong(Long::valueOf).toArray();
     }
     
     protected void run() throws IOException {
