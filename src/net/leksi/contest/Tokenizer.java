@@ -158,15 +158,15 @@ public class Tokenizer {
                         }
                     } else {
                         if(quote != '\0') {
-                            if(quote == buf[0] && escaped % 2 == 0) {
+                            if(quote == buf[0] && escaped == 0) {
                                 token.append(buf[0]);
                                 onToken(true, token.toString());
                                 token.delete(0, token.length());
                                 quote = '\0';
                             } else {
                                 token.append(buf[0]);
-                                if(buf[0] == '\\') {
-                                    escaped++;
+                                if(buf[0] == '\\' || escaped == 1) {
+                                    escaped ^= 1;
                                 }
                             }
                         } else {
