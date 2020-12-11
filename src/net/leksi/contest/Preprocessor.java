@@ -604,7 +604,7 @@ class Preprocessor {
                             String imp = tokens.subList(i, j + 1).stream().map(v -> v.startsWith("?") || v.startsWith("!") ? v.substring(1) : v).collect(Collectors.joining());
                             imports.add(imp);
                             i = j;
-                        } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) && ("?" + classname).equals(tokens.get(i + 1)))) {
+                        } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) || "?enum".equals(tokens.get(i)))) {
                             if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
                                 sb1.append("static ");
                                 line_length[0] += "static ".length();

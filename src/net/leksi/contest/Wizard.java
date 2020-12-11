@@ -57,6 +57,7 @@ public class Wizard {
         new Wizard().run(args);
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/{m;il,r,x/)"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?{2;ss}"});
     }
 
     private static void usage() {
@@ -96,7 +97,6 @@ public class Wizard {
             }
             System.out.println("Version");
             System.out.println("current: " + version[0]);
-            Reader BufferedReader;
             final String path = "/leksiq/java-contest-assistant/releases/tag/";
             try (
                 Reader r = new InputStreamReader((InputStream)new URL("https://github.com/leksiq/java-contest-assistant").getContent());
@@ -250,7 +250,7 @@ public class Wizard {
         boolean[] singleTest = new boolean[]{true};
         boolean[] localMultiTest = new boolean[]{false};
         int i = 0;
-        if(script.charAt(0) == '*') {
+        if(script.charAt(0) == '+') {
             singleTest[0] = false;
             i++;
         } else if(script.charAt(0) == '?') {
@@ -488,6 +488,8 @@ public class Wizard {
             sb.append(ind).append("/**************************/\n");
         };
         
+        boolean[] line_read = new boolean[]{false};
+        
         reenter.process = (cycle) -> {
             String[] indent1 = new String[]{"    "};
             if(cycle.parent != null && cycle.simple == null && !cycle.action) {
@@ -495,7 +497,6 @@ public class Wizard {
                 indent1[0] += indent1[0];
             }
             indention[0]++;
-            boolean[] line_read = new boolean[]{false};
             cycle.variables.forEach(v -> {
                 if(v instanceof Variable) {
                     Variable vv = (Variable)v;
@@ -564,6 +565,7 @@ public class Wizard {
                         } else {
                             if(vv.type.charAt(0) != 's') {
                                 sb2.append(" = sc.next").append(next).append("();\n");
+                                line_read[0] = false;
                             } else {
                                 sb2.append(" = sc.nextLine().trim();\n");
                                 line_read[0] = true;
@@ -571,9 +573,10 @@ public class Wizard {
                         }
                     } else {
                         if(!line_read[0]) {
-                            sb2.append(indent.get()).append("if(sc.hasNextLine()) {\n");
-                            sb2.append(indent.get()).append("    sc.nextLine();\n");
-                            sb2.append(indent.get()).append("}\n");
+                            sb2.append(indent.get()).append("sc.nextLine();\n");
+//                            sb2.append(indent.get()).append("if(sc.hasNextLine()) {\n");
+//                            sb2.append(indent.get()).append("    sc.nextLine();\n");
+//                            sb2.append(indent.get()).append("}\n");
                         }
                         line_read[0] = false;
                     }
