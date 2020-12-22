@@ -100,9 +100,11 @@ public abstract class Solver {
                 }
                 /*-Preprocess-DONOTCOPY*/
                 solve();
+                pw.flush();
             }
         } else {
             solve();
+            pw.flush();
         }
     }
     
