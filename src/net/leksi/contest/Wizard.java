@@ -601,6 +601,7 @@ public class Wizard {
                         if ("Token".equals(type1)) {
                             type1 = "String";
                         }
+                        String type3 = type1;
                         type1 += "[]";
                         sb2.append(type1);
                         if(cy.simple != null && cy.simple.length != null) {
@@ -611,7 +612,7 @@ public class Wizard {
                         if (cycle.base != null) {
                             sb2.append(cycle.base).append(".");
                         }
-                        sb2.append(field_name).append(" = new ").append(cy.class_name).append("[").append(cy.count).append("]");
+                        sb2.append(field_name).append(" = new ").append(type3).append("[").append(cy.count).append("]");
                         if (cy.simple != null && cy.simple.length != null) {
                             sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
                         }
