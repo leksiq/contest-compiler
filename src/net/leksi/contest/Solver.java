@@ -63,6 +63,8 @@ public abstract class Solver {
     /*+Preprocess-DONOTCOPY*/
     
     protected boolean localMultiTest = false;
+    protected String localNameIn = "";
+    protected String localNameOut = "";
     
     private void Preprocess_DONOTCOPY() {
         if(!doNotPreprocess) {
@@ -84,13 +86,16 @@ public abstract class Solver {
         if(localMultiTest) {
             singleTest = false;
         }
+        if(!"".equals(localNameIn)) {
+            nameIn = localNameIn;
+        }
+        if(!"".equals(localNameOut)) {
+            nameOut = localNameOut;
+        }
     }
     
     /*-Preprocess-DONOTCOPY*/
     private void process() throws IOException {
-        /*+Preprocess-DONOTCOPY*/
-        Preprocess_DONOTCOPY();
-        /*-Preprocess-DONOTCOPY*/
         if(!singleTest) {
             int t = lineToIntArray()[0];
             while(t-- > 0) {
@@ -123,6 +128,9 @@ public abstract class Solver {
     }
     
     protected void run() throws IOException {
+        /*+Preprocess-DONOTCOPY*/
+        Preprocess_DONOTCOPY();
+        /*-Preprocess-DONOTCOPY*/
         boolean done = false;
         try {
             if(nameIn != null && new File(nameIn).exists()) {

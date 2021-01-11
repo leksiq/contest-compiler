@@ -409,11 +409,14 @@ public class Wizard {
         StringBuilder sb2 = new StringBuilder();
         sb1.append("public class ").append(class_name).append(" extends Solver {\n");
         sb1.append("    public ").append(class_name).append("() {\n");
-        if(!stdout) {
-            sb1.append("        nameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n");
-        }
         if(singleTest[0]) {
             sb1.append("        singleTest = ").append(singleTest[0]).append(";\n");
+        }
+        if(!stdout) {
+            sb1.append("        /*+Preprocess-DONOTCOPY*/\n").
+                    append("        localNameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n").
+                    append("        localNameOut = null;\n").
+                    append("        /*-Preprocess-DONOTCOPY*/\n");
         }
         if(localMultiTest[0]) {
             sb1.append("        /*+Preprocess-DONOTCOPY*/\n").
