@@ -412,16 +412,15 @@ public class Wizard {
         if(singleTest[0]) {
             sb1.append("        singleTest = ").append(singleTest[0]).append(";\n");
         }
-        if(!stdout) {
-            sb1.append("        /*+Preprocess-DONOTCOPY*/\n").
-                    append("        localNameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n").
-                    append("        localNameOut = null;\n").
-                    append("        /*-Preprocess-DONOTCOPY*/\n");
-        }
-        if(localMultiTest[0]) {
-            sb1.append("        /*+Preprocess-DONOTCOPY*/\n").
-                    append("        localMultiTest = true;\n").
-                    append("        /*-Preprocess-DONOTCOPY*/\n");
+        if(!stdout || localMultiTest[0]) {
+            sb1.append("        /*+Preprocess-DONOTCOPY*/\n");
+            if(!stdout) {
+                sb1.append("        localNameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n");
+            }
+            if(localMultiTest[0]) {
+                sb1.append("        localMultiTest = true;\n");
+            }
+            sb1.append("        /*-Preprocess-DONOTCOPY*/\n");
         }
         sb1.append("    }\n");
         
@@ -629,8 +628,13 @@ public class Wizard {
                     if(cy.action) {
                         write_code.accept(indent.get(), sb2);
                     }
-                    sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; _i").
-                            append(field_name).append(" < ").append(cy.count).append("; _i").append(field_name).append("++) {\n");
+                    sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; ");
+                    if(!"*".equals(cy.count)) {
+                        sb2.append("_i").append(field_name).append(" < ").append(cy.count);
+                    } else {
+                        sb2.append("sc.hasNext()");
+                    }
+                    sb2.append("; _i").append(field_name).append("++) {\n");
                     if(cy.simple == null && !cy.action) {
                         sb2.append(indent.get()).append("    ").append(field_name).append("[_i").append(field_name).append("").append("] = new ").append(cy.class_name).append("();\n");
                     }

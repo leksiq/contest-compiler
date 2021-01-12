@@ -64,7 +64,6 @@ public abstract class Solver {
     
     protected boolean localMultiTest = false;
     protected String localNameIn = "";
-    protected String localNameOut = "";
     
     private void Preprocess_DONOTCOPY() {
         if(!doNotPreprocess) {
@@ -88,9 +87,6 @@ public abstract class Solver {
         }
         if(!"".equals(localNameIn)) {
             nameIn = localNameIn;
-        }
-        if(!"".equals(localNameOut)) {
-            nameOut = localNameOut;
         }
     }
     
@@ -300,6 +296,10 @@ public abstract class Solver {
         int[] i = new int[]{0};
         return a.map(v -> new Pair<T, Integer>(v, i[0]++)).collect(Collectors.toList());
     }
+    public static <T> List<Pair<T, Integer>> listi(final Collection<T> a) {
+        int[] i = new int[]{0};
+        return a.stream().map(v -> new Pair<T, Integer>(v, i[0]++)).collect(Collectors.toList());
+    }
     public static String join(final int[] a) {
         return Arrays.stream(a).mapToObj(Integer::toString).collect(Collectors.joining(SPACE));
     }
@@ -358,6 +358,10 @@ public abstract class Solver {
 
     public static <T> List<T> list(final Stream<T> a) {
         return a.collect(Collectors.toList());
+    }
+
+    public static <T> List<T> list(final Collection<T> a) {
+        return a.stream().collect(Collectors.toList());
     }
 
     public static <T> List<T> list(final T[] a) {
