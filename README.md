@@ -38,7 +38,9 @@ The "input script" means the script on lightweight special language. This script
     script                      ::=     ('*' | '?')? input-of-test
     input-of-test               ::=     input-of-cycle
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
-    cycle                       ::=     '(' (variable-name | number) ';' input-of-cycle ')'
+    cycle                       ::=     data-cycle | loop-cycle
+    data-cycle                  ::=     '(' (variable-name | number) ';' input-of-cycle ')'
+    loop-cycle                  ::=     '{' (variable-name | number | '*') ';' input-of-cycle '}'
     variables-group             ::=     same-type-variables-group (';' same-type-variables-group | new-line)*
     variable-name               ::=     <Java's  legal identifier>
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
@@ -53,6 +55,10 @@ The "input script" means the script on lightweight special language. This script
 
 `type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
+
+`data-cycle` means that a responsible data structure is created as array of objects.
+
+`loop-cycle` means that a loop with local variables is created. `'*'` means that the cycle repeats until end of input.
 
 `java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. 
 
@@ -121,23 +127,25 @@ and optionally reassigning protected fields
     protected String nameIn = null;
     protected String nameOut = null;
     protected boolean singleTest = false;
-    protected boolean localMultiTest = false;
     protected boolean doNotPreprocess = false;
     protected boolean preprocessDebug = false;
     protected PrintStream debugPrintStream = null;
+    protected boolean localMultiTest = false;
+    protected boolean localnameIn = "";
 
 1. `nameIn` - name of input file if the problem requires file input or while testing. Otherwise leave it unchanged (default `null` means console input). If the input file is not found then console input is used, so you may test using file input and submit into "Online Judges" system with console input without changing.
 2. `nameOut` - name of output file if the problem requires file output or while testing, otherwise leave it unchanged (default `null` means console output). **Unlike the previous case you should set `null` if the problem requires console output**.
 3. `singleTest` - set `false` (or leave unchanged default `false`) if the problem will be run at multiple test cases. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `true`.
+5. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
+6. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
+7. `debugPrintStream` - set `System.err` if you want to get Exception message at the place it is thrown.
 4. `localMultiTest` - set `true` if the problem will be run under single test case at judge system, but multiple ones at a local testing. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `false`  (or leave unchanged default `false`). Note: use this field inside special construction: 
 ````    
         /*+Preprocess-DONOTCOPY*/
         localMultiTest = true;
         /*-Preprocess-DONOTCOPY*/
 ````
-5. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
-6. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
-7. `debugPrintStream` - set `System.err` if you want to get Exception message at the place it is thrown.
+8. `localnameIn` - set the path to the local input file even if the judge system use stdin.
 
 There are some methods to simplify routine actions:
 
@@ -145,40 +153,79 @@ There are some methods to simplify routine actions:
 
     protected long[] lineToLongArray() throws IOException;
     
-    protected String joinToString(final int[] a);
+    protected String[] lineToArray() throws IOException;
+    
+    public static String join(final int[] a);
 
-    protected String joinToString(final IntStream a);
+    public static String join(final IntStream a);
 
-    protected String joinToString(final long[] a);
+    public static String join(final long[] a);
     
-    protected String joinToString(final LongStream a);
+    public static String join(final LongStream a);
 
-    protected <T> String joinToString(final Collection<T> a);
+    public static <T> String join(final Collection<T> a);
     
-    protected <T> String joinToString(final Collection<T> a, final Function<T, String> toString);
+    public static <T> String join(final Collection<T> a, final Function<T, String> toString);
     
-    protected <T> String joinToString(final T[] a);
+    public static <T> String join(final T[] a);
     
-    protected <T> String joinToString(final T[] a, final Function<T, String> toString);
+    public static <T> String join(final T[] a, final Function<T, String> toString);
     
-    protected <T> String joinToString(final Stream<T> a);
+    public static <T> String join(final Stream<T> a);
     
-    protected <T> String joinToString(final Stream<T> a, final Function<T, String> toString);
+    public static <T> String join(final Stream<T> a, final Function<T, String> toString);
     
-    protected List<Long> toList(final long[] a);
+    public static List<Long> list(final long[] a);
 
-    protected List<Integer> toList(final int[] a);
+    public static List<Integer> list(final int[] a);
     
-    protected <T> List<T> toList(final T[] a);
+    public static <T> List<T> list(final T[] a);
     
-    protected List<Long> intArrayToLongList(final int[] a);
+    public static List<Integer> list(final IntStream a);
     
+    public static List<Long> list(final LongStream a);
+    
+    public static <T> List<T> list(final Stream<T> a);
+    
+    public static <T> List<T> list(final Collection<T> a);
+    
+    public static List<int[]> listi(final int[] a);
+    
+    public static List<long[]> listi(final long[] a);
+    
+    public static <T> List<Pair<T, Integer>> listi(final T[] a);
+    
+    public static List<int[]> listi(final IntStream a);
+    
+    public static List<long[]> listi(final LongStream a);
+    
+    public static <T> List<Pair<T, Integer>> listi(final Stream<T> a);
+    
+    public static <T> List<Pair<T, Integer>> listi(final Collection<T> a);
+
+    public static Map<Integer, List<Integer>> mapi(final int[] a);
+    
+    public static Map<Long, List<Integer>> mapi(final long[] a);
+    
+    public static <T> Map<T, List<Integer>> mapi(final T[] a);
+    
+    public static <T> Map<T, List<Integer>> mapi(final T[] a, Comparator<T> cmp);
+    
+    public static Map<Integer, List<Integer>> mapi(final IntStream a);
+    
+    public static Map<Long, List<Integer>> mapi(final LongStream a);
+    
+    public static <T> Map<T, List<Integer>> mapi(final Stream<T> a, Comparator<T> cmp);
+    
+    public static <T> Map<T, List<Integer>> mapi(final Stream<T> a);
+
+1. `lineToArray` splits rest of input line as `String[]` delimited with spaces.
 1. `lineToIntArray` parses rest of input line as `int[]` delimited with spaces.
 1. `lineToLongArray` parses rest of input line as `long[]` delimited with spaces.
-1. `joinToString` joins `int[]` or `long[]`, or Object's array or Collection into `String` delimited with spaces.
-1. `longArrayToString` joins `long[]` into `String` delimited with spaces.
-1. `toList` creates  `List<Long>` from `long[]` and `List<Integer>` from `int[]`.
-1. `intArrayToLongList` creates  `List<Long>` from `int[]`.
+1. `join` joins `int[]` or `long[]`, or Object's array, or Collection, or Stream into `String` delimited with spaces.
+1. `list` creates  `List<...>` from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
+1. `listi` creates  `List<...>` of values together with initial indexes from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
+1. `mapi` creates  `Map<...>` of values together with `List<Integer>` of initial indexes from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
 
 Also there are predefined protected fields for reading input and writing to output:
 
