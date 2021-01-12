@@ -629,7 +629,7 @@ public class Wizard {
                         write_code.accept(indent.get(), sb2);
                     }
                     sb2.append(indent.get()).append("for(int ").append("_i").append(field_name).append(" = 0; ");
-                    if(!"*".equals(cy.count)) {
+                    if(!"+".equals(cy.count)) {
                         sb2.append("_i").append(field_name).append(" < ").append(cy.count);
                     } else {
                         sb2.append("sc.hasNext()");
