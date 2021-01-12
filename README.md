@@ -35,12 +35,12 @@ Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data s
 The "input script" means the script on lightweight special language. This script follows the task input description.
 ### The Script Language Grammar
 
-    script                      ::=     ('*' | '?')? input-of-test
+    script                      ::=     ('+' | '?')? input-of-test
     input-of-test               ::=     input-of-cycle
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
     cycle                       ::=     data-cycle | loop-cycle
     data-cycle                  ::=     '(' (variable-name | number) ';' input-of-cycle ')'
-    loop-cycle                  ::=     '{' (variable-name | number | '*') ';' input-of-cycle '}'
+    loop-cycle                  ::=     '{' (variable-name | number | '+') ';' input-of-cycle '}'
     variables-group             ::=     same-type-variables-group (';' same-type-variables-group | new-line)*
     variable-name               ::=     <Java's  legal identifier>
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
@@ -49,7 +49,7 @@ The "input script" means the script on lightweight special language. This script
     variable-definition         ::=     variable-name ('[' array-length? ']')?
     array-length                ::=     variable-name | number
     
-`'*'` at the beginning of script means that there are multiple test at each submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
+`'+'` at the beginning of script means that there are multiple test at each submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
 
 `'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
 
@@ -58,7 +58,7 @@ if the variable is an array its definition should end with `'['`, optional `leng
 
 `data-cycle` means that a responsible data structure is created as array of objects.
 
-`loop-cycle` means that a loop with local variables is created. `'*'` means that the cycle repeats until end of input.
+`loop-cycle` means that a loop with local variables is created. `'+'` means that the cycle repeats until end of input.
 
 `java.lang.String` variable takes all chars till the end of line, `java.lang.String` *array* variable takes substrings split with spaces at the rule described before. 
 
