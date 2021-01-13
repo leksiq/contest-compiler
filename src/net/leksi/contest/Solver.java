@@ -367,5 +367,9 @@ public abstract class Solver {
     public static <T> List<T> list(final T[] a) {
         return Arrays.stream(a).collect(Collectors.toList());
     }
+    
+    public static String yesNo(final boolean res) {
+        return res ? "YES" : "NO";
+    }
 
 }
