@@ -156,68 +156,42 @@ There are some methods to simplify routine actions:
     protected String[] lineToArray() throws IOException;
     
     public static String join(final int[] a);
-
     public static String join(final IntStream a);
-
     public static String join(final long[] a);
-    
     public static String join(final LongStream a);
-
     public static <T> String join(final Collection<T> a);
-    
     public static <T> String join(final Collection<T> a, final Function<T, String> toString);
-    
     public static <T> String join(final T[] a);
-    
     public static <T> String join(final T[] a, final Function<T, String> toString);
-    
     public static <T> String join(final Stream<T> a);
-    
     public static <T> String join(final Stream<T> a, final Function<T, String> toString);
     
     public static List<Long> list(final long[] a);
-
     public static List<Integer> list(final int[] a);
-    
     public static <T> List<T> list(final T[] a);
-    
     public static List<Integer> list(final IntStream a);
-    
     public static List<Long> list(final LongStream a);
-    
     public static <T> List<T> list(final Stream<T> a);
-    
     public static <T> List<T> list(final Collection<T> a);
     
     public static List<int[]> listi(final int[] a);
-    
     public static List<long[]> listi(final long[] a);
-    
     public static <T> List<Pair<T, Integer>> listi(final T[] a);
-    
     public static List<int[]> listi(final IntStream a);
-    
     public static List<long[]> listi(final LongStream a);
-    
     public static <T> List<Pair<T, Integer>> listi(final Stream<T> a);
-    
     public static <T> List<Pair<T, Integer>> listi(final Collection<T> a);
-
+    
     public static Map<Integer, List<Integer>> mapi(final int[] a);
-    
     public static Map<Long, List<Integer>> mapi(final long[] a);
-    
     public static <T> Map<T, List<Integer>> mapi(final T[] a);
-    
     public static <T> Map<T, List<Integer>> mapi(final T[] a, Comparator<T> cmp);
-    
     public static Map<Integer, List<Integer>> mapi(final IntStream a);
-    
     public static Map<Long, List<Integer>> mapi(final LongStream a);
-    
     public static <T> Map<T, List<Integer>> mapi(final Stream<T> a, Comparator<T> cmp);
-    
     public static <T> Map<T, List<Integer>> mapi(final Stream<T> a);
+    
+    public static String yesNo(final boolean res);
 
 1. `lineToArray` splits rest of input line as `String[]` delimited with spaces.
 1. `lineToIntArray` parses rest of input line as `int[]` delimited with spaces.
@@ -226,6 +200,7 @@ There are some methods to simplify routine actions:
 1. `list` creates  `List<...>` from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
 1. `listi` creates  `List<...>` of values together with initial indexes from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
 1. `mapi` creates  `Map<...>` of values together with `List<Integer>` of initial indexes from `long[]` or `int[]`, or Object's array, or Collection, or Stream.
+1. `yesNo` returns `'YES'` or `'NO'` String respective to the argument.
 
 Also there are predefined protected fields for reading input and writing to output:
 
