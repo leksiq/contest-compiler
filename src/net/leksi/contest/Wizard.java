@@ -576,9 +576,6 @@ public class Wizard {
                     } else {
                         if(!line_read[0]) {
                             sb2.append(indent.get()).append("sc.nextLine();\n");
-//                            sb2.append(indent.get()).append("if(sc.hasNextLine()) {\n");
-//                            sb2.append(indent.get()).append("    sc.nextLine();\n");
-//                            sb2.append(indent.get()).append("}\n");
                         }
                         line_read[0] = false;
                     }

@@ -36,7 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +53,7 @@ public abstract class Solver {
     protected boolean doNotPreprocess = false;
     protected PrintStream debugPrintStream = null;
     
-    protected Scanner sc = null;
+    protected MyScanner sc = null;
     protected PrintWriter pw = null;
     
     final static String SPACE = " ";
@@ -135,7 +134,7 @@ public abstract class Solver {
                         PrintWriter pw0 = select_output();
                     ) {
                         done = true;
-                        sc = new Scanner(fis);
+                        sc = new MyScanner(fis);
                         pw = pw0;
                         process();
                     }
@@ -147,7 +146,7 @@ public abstract class Solver {
             try (
                 PrintWriter pw0 = select_output();
             ) {
-                sc = new Scanner(System.in);
+                sc = new MyScanner(System.in);
                 pw = pw0;
                 process();
             }
