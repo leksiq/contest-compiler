@@ -45,7 +45,7 @@ The "input script" means the script on lightweight special language. This script
     variable-name               ::=     <Java's  legal identifier>
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
     new-line                    ::=     '/'
-    type                        ::=     'i' | 'l' | 'd' | 's' | 't'
+    type                        ::=     'c' | 'i' | 'l' | 'd' | 's' | 't'
     variable-definition         ::=     variable-name ('[' array-length? ']')?
     array-length                ::=     variable-name | number
     
@@ -53,7 +53,7 @@ The "input script" means the script on lightweight special language. This script
 
 `'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
 
-`type` means type of variable, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
+`type` means type of variable, `'c'`, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `char` (casted to `int`), `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
 
 `data-cycle` means that a responsible data structure is created as array of objects.
@@ -204,9 +204,10 @@ There are some methods to simplify routine actions:
 
 Also there are predefined protected fields for reading input and writing to output:
 
-    protected Scanner sc;
+    protected MyScanner sc;
     protected PrintWriter pw;
-    
+ 
+`MyScanner` is a lightweight cut implementation of `java.util.Scanner`,
 both are supplied in base class in dependence of `nameIn` and `nameOut` fields
 
 ### Examples
