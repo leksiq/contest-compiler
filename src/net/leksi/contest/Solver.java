@@ -114,6 +114,10 @@ public abstract class Solver {
         return sc.nextLine().trim().split(SPACES);
     }
 
+    protected int[] lineToCharArray() throws IOException {
+        return sc.nextLine().chars().toArray();
+    }
+
     protected int[] lineToIntArray() throws IOException {
         return Arrays.stream(lineToArray()).mapToInt(Integer::valueOf).toArray();
     }

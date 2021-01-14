@@ -229,5 +229,20 @@ public class MyScanner {
         }
         return sb.toString();
     }
+
+    public int nextChar() {
+        return get();
+    }
+    
+    public boolean eof() {
+        int c = get();
+        boolean res = false;
+        if(c != -1) {
+            unget(c);
+        } else {
+            res = true;
+        }
+        return res;
+    }
     
 }

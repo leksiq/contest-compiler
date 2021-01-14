@@ -156,7 +156,7 @@ public class Wizard {
         }
     }
     static final String DELIMS = "/,;()[]{}";
-    static final String TYPES = "ildst";
+    static final String TYPES = "ildstc";
     
     Stack<Cycle> cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
@@ -430,6 +430,9 @@ public class Wizard {
         UnaryOperator<String> type2 = s -> {
             String type1 = "int";
             switch (s.charAt(0)) {
+                case 'c':
+                    type1 = "char";
+                    break;
                 case 'i':
                     type1 = "int";
                     break;
@@ -507,6 +510,8 @@ public class Wizard {
                         String type1 = type2.apply(vv.type);
                         if("Token".equals(type1)) {
                             type1 = "String";
+                        } else if("char".equals(type1)) {
+                            type1 = "int";
                         }
                         String next = next2.apply(vv.type);
                         if(vv.type.endsWith("[")) {
@@ -557,10 +562,10 @@ public class Wizard {
                                 sb2.append(indent.get()).append("}\n");
                             } else {
                                 line_read[0] = true;
-                                if(vv.type.charAt(0) != 's') {
-                                    sb2.append(" = lineTo").append(next).append("Array()");
-                                } else {
+                                if(vv.type.charAt(0) == 's') {
                                     sb2.append(" = sc.nextLine().trim().split(\"\\\\s+\")");
+                                } else {
+                                    sb2.append(" = lineTo").append(next).append("Array()");
                                 }
                                 sb2.append(";\n");
                             }
@@ -629,7 +634,7 @@ public class Wizard {
                     if(!"+".equals(cy.count)) {
                         sb2.append("_i").append(field_name).append(" < ").append(cy.count);
                     } else {
-                        sb2.append("sc.hasNext()");
+                        sb2.append("!sc.eof()");
                     }
                     sb2.append("; _i").append(field_name).append("++) {\n");
                     if(cy.simple == null && !cy.action) {
