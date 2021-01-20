@@ -58,6 +58,7 @@ public class Wizard {
 //        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/{m;il,r,x/)"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?{2;ss}"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n]/ib[a[3]]/ic[]"});
     }
 
     private static void usage() {
@@ -263,6 +264,7 @@ public class Wizard {
         
         String type = null;
         boolean wait_for_name = false;
+        boolean wait_for_wf = false;
         boolean wait_for_var = false;
         int[] class_gen = new int[]{0};
         
@@ -310,6 +312,7 @@ public class Wizard {
                                 }
                                 wf = "]";
                                 wait_for_name = true;
+                                wait_for_wf = true;
                                 break;
                             case ']':
                                 wf = "/,;(){}";
@@ -326,6 +329,7 @@ public class Wizard {
                                 var = null;
                                 wf = ";";
                                 wait_for_name = true;
+                                wait_for_wf = true;
                                 break;
                             case ')':
                             case '}':
@@ -338,7 +342,19 @@ public class Wizard {
                     }
                 } else {
                     int j = i;
-                    for(; j < script.length() && DELIMS.indexOf(script.charAt(j)) < 0 && !Character.isSpaceChar(script.charAt(j)); j++){}
+                    if(wait_for_wf) {
+                        int brak = 0;
+                        for(; j < script.length() && (script.charAt(j) != wf.charAt(0) || brak > 0); j++){
+                            if(script.charAt(j) == '[') {
+                                brak++;
+                            } else if(script.charAt(j) == ']') {
+                                brak--;
+                            }
+                        }
+                        wait_for_wf = false;
+                    } else {
+                        for(; j < script.length() && DELIMS.indexOf(script.charAt(j)) < 0 && !Character.isSpaceChar(script.charAt(j)); j++){}
+                    }
                     String name = script.substring(i, j);
 //                    System.out.println(name);
                     if(wait_for_var) {
@@ -359,7 +375,6 @@ public class Wizard {
                         cycles.peek().count = name;
                     } else if("]".equals(wf)) {
                         var.length = name;
-                        var = null;
                     }
                     for(; j < script.length() && Character.isSpaceChar(script.charAt(j)); j++){}
                     if(j < script.length() && wf.indexOf(script.charAt(j)) < 0) {
@@ -537,7 +552,8 @@ public class Wizard {
                             }
                         }
                         if(vv.length != null) {
-                            String count =  find_variable.apply(cycle, vv);
+                            String count =  vv.length;
+//                            String count =  find_variable.apply(cycle, vv);
                             if(!"".equals(vv.length)) {
                                 if(cycle.simple == null || vv.length == null) {
                                     sb2.append(" = new ").append(type1.replace("[]", "")).append("[");
@@ -618,7 +634,8 @@ public class Wizard {
                         }
                         sb2.append(field_name).append(" = new ").append(type3).append("[").append(cy.count).append("]");
                         if (cy.simple != null && cy.simple.length != null) {
-                            sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
+//                            sb2.append("[").append(find_variable.apply(cy, cy.simple)).append("]");
+                            sb2.append("[").append(cy.simple.length).append("]");
                         }
                         sb2.append(";\n");
                     }
