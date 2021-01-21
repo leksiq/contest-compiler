@@ -160,6 +160,7 @@ public class Wizard {
     static final String TYPES = "ildstc";
     
     Stack<Cycle> cycles = new Stack<>();
+    Stack<Cycle> data_cycles = new Stack<>();
     ArrayList<Cycle> all_cycles = new ArrayList<>();
     TreeSet<String> var_names = new TreeSet<>();
 
@@ -325,6 +326,11 @@ public class Wizard {
                                 last_cycle.action = c == '{';
                                 cycles.peek().variables.add(last_cycle);
                                 cycles.push(last_cycle);
+                                if(!last_cycle.action) {
+                                    data_cycles.push(last_cycle);
+                                } else if(!data_cycles.isEmpty()) {
+                                    throw new RuntimeException("An action cycle inside a data cycle (\"(...{...}...)\") is not allowed!");
+                                }
                                 all_cycles.add(last_cycle);
                                 var = null;
                                 wf = ";";
@@ -333,7 +339,10 @@ public class Wizard {
                                 break;
                             case ')':
                             case '}':
-                                cycles.pop();
+                                Cycle cy = cycles.pop();
+                                if(!cy.action) {
+                                    data_cycles.pop();
+                                }
                                 var = null;
                                 wf = TYPES + "(){}/";
                                 wait_for_name = false;
