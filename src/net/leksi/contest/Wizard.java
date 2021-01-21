@@ -643,6 +643,7 @@ public class Wizard {
                         do {
                             field_name = "f" + (cycle.field_gen++);
                         } while (var_names.contains(field_name));
+                        var_names.add(field_name);
                     }
                     if(cy.action) {
                         write_code.accept(indent.get(), sb2);
