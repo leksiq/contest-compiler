@@ -123,80 +123,12 @@ public class MyScanner {
     
     public int nextInt() {
 //        System.out.println("nextInt:");
-        int sign = 0;
-        boolean done = false;
-        boolean started = false;
-        int res = 0;
-        int c;
-        while((c = get()) != -1) {
-            check_linebreak(c);
-            if (sign == 0 && c == '-') {
-                started = true;
-                sign = -1;
-            } else if (c >= '0' && c <= '9') {
-                if(sign == 0) {
-                    sign = 1;
-                }
-                started = true;
-                res *= 10;
-                res += c - '0';
-                done = true;
-            } else if (!done) {
-                if(started) {
-                    unget(c);
-                    if(sign == -1) {
-                        unget('-');
-                    }
-                    break;
-                }
-            } else {
-                unget(c);
-                break;
-            }
-        }
-        if(done) {
-            return res * sign;
-        }
-        throw new RuntimeException();
+        return Integer.parseInt(next());
     }
 
     public long nextLong() {
 //        System.out.println("nextLong:");
-        int sign = 0;
-        boolean done = false;
-        boolean started = false;
-        long res = 0;
-        int c;
-        while((c = get()) != -1) {
-            check_linebreak(c);
-            if (sign == 0 && c == '-') {
-                started = true;
-                sign = -1;
-            } else if (c >= '0' && c <= '9') {
-                if(sign == 0) {
-                    sign = 1;
-                }
-                started = true;
-                res *= 10;
-                res += c - '0';
-                done = true;
-            } else if (!done) {
-                if(started) {
-                    unget(c);
-                    if(sign == -1) {
-                        unget('-');
-                    }
-                    break;
-                }
-            } else {
-                unget(c);
-                break;
-            }
-        }
-        if(done) {
-            return res * sign;
-        }
-        throw new RuntimeException();
+        return Long.parseLong(next());
     }
 
     public boolean hasNext() {
@@ -243,6 +175,10 @@ public class MyScanner {
             res = true;
         }
         return res;
+    }
+
+    public double nextDouble() {
+        return Double.parseDouble(next());
     }
     
 }
