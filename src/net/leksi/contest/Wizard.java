@@ -627,8 +627,10 @@ public class Wizard {
                         }
                         sb2.append(indent.get());
                         String type1 = cy.simple != null ? type2.apply(cy.simple.type) : cy.class_name;
-                        if ("Token".equals(type1)) {
+                        if("Token".equals(type1)) {
                             type1 = "String";
+                        } else if("char".equals(type1)) {
+                            type1 = "int";
                         }
                         String type3 = type1;
                         type1 += "[]";

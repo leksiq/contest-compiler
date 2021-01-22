@@ -251,6 +251,7 @@ public abstract class Solver {
     public static <T> Map<T, Integer> mapc(final Collection<T> a) {
         return mapc(a.stream());
     }
+    
     public static Map<Integer, List<Integer>> mapi(final int[] a) {
         return IntStream.range(0, a.length).collect(
             () -> new TreeMap<Integer, List<Integer>>(), 
