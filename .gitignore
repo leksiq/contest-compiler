@@ -4,3 +4,5 @@ build
 build.xml
 dist
 presentation
+test/in
+test/out

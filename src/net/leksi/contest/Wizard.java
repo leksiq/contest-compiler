@@ -763,62 +763,66 @@ public class Wizard {
                         File tmp = File.createTempFile("temp", null);
                         tmp.deleteOnExit();
                         args1[args.length + 1] = tmp.getAbsolutePath();
-                        new Wizard().run(args1);
-                        sb2.delete(0, sb2.length());
-                        try (
-                                FileReader fr = new FileReader(save);
-                                BufferedReader br = new BufferedReader(fr);
-                                FileReader fr_tmp = new FileReader(tmp);
-                                BufferedReader br_tmp = new BufferedReader(fr_tmp);
-                        ) {
-                            String line;
-                            String line_tmp = null;
-                            boolean stopped = false;
-                            boolean stopped_tmp = false;
-                            ArrayList<String> saved_code = new ArrayList<>();
-                            while (!stopped) {
-                                if(!stopped_tmp) {
-                                    String line1 = br_tmp.readLine();
-                                    if(line1 == null) {
-                                        stopped_tmp = true;
-                                    } else {
-                                        if("".equals(line1.trim())) {
-                                            continue;
+                        try {
+                            new Wizard().run(args1);
+                            sb2.delete(0, sb2.length());
+                            try (
+                                    FileReader fr = new FileReader(save);
+                                    BufferedReader br = new BufferedReader(fr);
+                                    FileReader fr_tmp = new FileReader(tmp);
+                                    BufferedReader br_tmp = new BufferedReader(fr_tmp);
+                            ) {
+                                String line;
+                                String line_tmp = null;
+                                boolean stopped = false;
+                                boolean stopped_tmp = false;
+                                ArrayList<String> saved_code = new ArrayList<>();
+                                while (!stopped) {
+                                    if(!stopped_tmp) {
+                                        String line1 = br_tmp.readLine();
+                                        if(line1 == null) {
+                                            stopped_tmp = true;
+                                        } else {
+                                            if("".equals(line1.trim())) {
+                                                continue;
+                                            }
+                                            line_tmp = line1;
                                         }
-                                        line_tmp = line1;
+                                    }
+                                    while(!stopped) {
+                                        String line1 = br.readLine();
+                                        if(line1 == null) {
+                                            stopped = true;
+                                            break;
+                                        }
+                                        line = line1;
+                                        if(line.trim().equals(line_tmp.trim())) {
+                                            if(sb2.toString().trim().length() > 0) {
+                                                saved_code.add(sb2.toString());
+                                                sb2.delete(0, sb2.length());
+                                            }
+                                            break;
+                                        }
+                                        sb2.append(line).append("\n");
                                     }
                                 }
-                                while(!stopped) {
-                                    String line1 = br.readLine();
-                                    if(line1 == null) {
-                                        stopped = true;
-                                        break;
-                                    }
-                                    line = line1;
-                                    if(line.trim().equals(line_tmp.trim())) {
-                                        if(sb2.toString().trim().length() > 0) {
-                                            saved_code.add(sb2.toString());
-                                            sb2.delete(0, sb2.length());
-                                        }
-                                        break;
-                                    }
-                                    sb2.append(line).append("\n");
+                                if(sb2.toString().trim().length() > 0) {
+                                    saved_code.add(sb2.toString());
+                                    sb2.delete(0, sb2.length());
+                                }
+                                for(int j = 0; j < saved_code.size(); j++) {
+                                    sb2.append("\n");
+                                    sb2.append("        /**** begin of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                    sb2.append(saved_code.get(j));
+                                    sb2.append("        /**** end of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                    sb2.append("\n");
+                                }
+                                if(sb2.length() > 0) {
+                                    sb1.insert(saved_code_pos, sb2.toString());
                                 }
                             }
-                            if(sb2.toString().trim().length() > 0) {
-                                saved_code.add(sb2.toString());
-                                sb2.delete(0, sb2.length());
-                            }
-                            for(int j = 0; j < saved_code.size(); j++) {
-                                sb2.append("\n");
-                                sb2.append("        /**** begin of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
-                                sb2.append(saved_code.get(j));
-                                sb2.append("        /**** end of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
-                                sb2.append("\n");
-                            }
-                            if(sb2.length() > 0) {
-                                sb1.insert(saved_code_pos, sb2.toString());
-                            }
+                        } catch (Exception ex) {
+                            System.out.println("Can not find changes. See previous version at " + save);
                         }
                     }
                 }
