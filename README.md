@@ -39,7 +39,7 @@ The "input script" means the script on lightweight special language. This script
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
     cycle                       ::=     data-cycle | loop-cycle
     input-of-data-cycle         ::=     data-cycle* (variables-group data-cycle+)* variables-group?
-    data-cycle                  ::=     '(' (<proper-java-expression> | '+') ';' input-of-data-cycle ')'
+    data-cycle                  ::=     '(' <proper-java-expression>) ';' input-of-data-cycle ')'
     loop-cycle                  ::=     '{' (<proper-java-expression> | '+') ';' input-of-cycle '}'
     variables-group             ::=     new-line* same-type-variables-group (';' same-type-variables-group | new-line)*
     variable-name               ::=     <Java's  legal identifier>
