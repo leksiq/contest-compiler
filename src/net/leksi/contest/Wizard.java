@@ -29,16 +29,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -47,11 +50,8 @@ import java.util.stream.Collectors;
 public class Wizard {
     
     static public void main(final String[] args) throws IOException {
-//        new Wizard().run(args);
-//        new Wizard().run(new String[]{"A", "*in,m/ia[n]/ss/(m;lb[]/)ic[m]"});
-        new Wizard().run(new String[]{"-stdout", "A", "?in,h,m/{m;il,r,x/)"});
-//        new Wizard().run(new String[]{"-stdout", "A", "?{2;ss}"});
-        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n]/ib[a[3]]/ic[]"});
+        new Wizard().run(args);
+//        new Wizard().run(new String[]{"-stdout", "A", "{+;ss/}"});
     }
 
     private static void usage() {
@@ -119,47 +119,65 @@ public class Wizard {
         }
     }
 
-    private String show_pos(String[][] string) {
-        Arrays.sort(string, (x, y) -> Integer.parseInt(y[0]) - Integer.parseInt(y[0]));
-        StringBuilder sb = new StringBuilder();
+    private String show_pos(String script, String[][] msgs) {
+        Arrays.sort(msgs, (x, y) -> Integer.parseInt(x[0]) - Integer.parseInt(y[0]));
+        StringBuilder sb = new StringBuilder(script).append("\n");
         int pos = 0;
-        for(String[] s: string) {
-            int indent = Integer.parseInt(s[0]) - pos;
-            sb.append(String.format("%" + (indent == 0 ? "" : Integer.toString(indent)) + "s^", ""));
-            pos += indent;
+        int indent = 0;
+        for(int i = 0; i < msgs.length; i++) {
+            indent = Integer.parseInt(msgs[i][0]) - pos;
+            sb.append(String.format("%" + (indent == 0 ? "" : Integer.toString(indent)) + "s%s", "", i < msgs.length - 1 ? "|" : "+"));
+            pos += indent + 1;
+        }
+        indent = script.length() - pos + 1;
+        sb.append(String.format("%" + (indent == 0 ? "" : Integer.toString(indent)) + "s", "").replace(" ", "-")).append(" ").append(msgs[msgs.length - 1][1]);
+        sb.append("\n");
+        for(int i = msgs.length - 2; i >= 0; i--) {
+            pos = 0;
+            for (int j = 0; j <= i; j++) {
+                indent = Integer.parseInt(msgs[j][0]) - pos;
+                sb.append(String.format("%" + (indent == 0 ? "" : Integer.toString(indent)) + "s%s", "", j < i - 1 ? "|" : "+"));
+                pos += indent + 1;
+            }
+            indent = script.length() - pos + 1;
+            sb.append(String.format("%" + (indent == 0 ? "" : Integer.toString(indent)) + "s", "").replace(" ", "-")).append(" ").append(msgs[i][1]);
+            sb.append("\n");
         }
         return sb.toString();
     }
-
-    interface IVariable {}
     
-    static class Variable implements IVariable {
-        String type;
-        String name;
-        Stack<String> lengths = new Stack<>();
+    static class Variable {
+        String type = null;
+        String name = null;
+        Stack<String[]> lengths = new Stack<>();
+        Stack<Variable> variables = new Stack<>();
+        int pos = 0;
+        int variable = -1;
+        boolean is_action = false;
+        
         @Override
         public String toString() {
-            return String.format("{V:%s;%s;%s}", type == null ? "-" : type, 
-                name == null ? "-" : name, lengths.toString()
+            if("/".equals(name)) {
+                return "/";
+            }
+            return String.format("{%s:%s;%s;%s;[%s]}", 
+                is_action ? "A" : "D",
+                type == null ? "-" : type, 
+                name == null ? "-" : name, 
+                lengths.stream().map(v -> "(" + v[0] + ", " + v[1] + ")").collect(Collectors.joining(", ", "[", "]")),
+                IntStream.range(0, variables.size()).mapToObj(i -> (i == variable ? "*" : "") + variables.get(i).toString()).collect(Collectors.joining(","))
             );
         }
-    }
-
-    static class Cycle implements IVariable {
-        String count;
-        Stack<IVariable> variables = new Stack<>();
-        Cycle parent = null;
-        String class_name;
-        int field_gen = 0;
-        boolean is_action = false;
-        int pos = 0;
-        @Override
-        public String toString() {
-            return String.format("{%s:%s;[%s]}", 
-                is_action ? "A" : "D",
-                count == null ? "-" : count, 
-                variables.stream().map(Object::toString).collect(Collectors.joining(","))
-            );
+        String render_class(final int indention) {
+            if(is_action || TYPES.contains(type)) {
+                return null;
+            }
+            if(variable > 0) {
+                return variables.get(variable).render_class(indention);
+            }
+            StringBuilder sb = new StringBuilder();
+            
+            return sb.toString();
         }
     }
 
@@ -173,39 +191,53 @@ public class Wizard {
             addAll("ildstc".chars().mapToObj(Integer::valueOf).collect(Collectors.toList()));
         }
     };
+    static final TreeSet<Integer> NONAME = new TreeSet<Integer>() {
+        {
+            addAll(BRAKETS);
+            addAll(",;/".chars().mapToObj(Integer::valueOf).collect(Collectors.toList()));
+        }
+    };
+    
 
-    Stack<Cycle> cycles = new Stack<>();
+    Stack<Variable> tree = new Stack<>();
     TreeSet<Integer> wf = new TreeSet<>();
     Stack<Integer> brackets = new Stack<>();
-
+    String script = null;
+    
     private void set_wait_for(Object ...symbols) {
         wf.clear();
         for(Object sym: symbols) {
             if(sym instanceof String) {
                 wf.addAll(((String)sym).chars().mapToObj(Integer::valueOf).collect(Collectors.toList()));
             } else if(sym instanceof Collection) {
-                wf.addAll((Collection)sym);
+                @SuppressWarnings("unchecked")
+                final Collection<Integer> sym1 = (Collection<Integer>)sym;
+                wf.addAll(sym1);
             } else {
                 wf.add((int)((Character)sym).charValue());
             }
         }
+        if(wf.first() == 0) {
+            wf.pollFirst();
+        }
     }
     
-    private boolean check_brackets(int c, int pos, String script) {
+    private boolean check_brackets(int c, int pos) {
         if(BRAKETS.contains(c)) {
+//            System.out.println("brakets: " + brackets.stream().map(v -> "'" + script.charAt(v) + "'").collect(Collectors.joining(", ", "[", "]")));
             if(c == '(' || c == '{' || c == '[') {
                 brackets.push(pos);
             } else {
                 if (brackets.isEmpty()) {
-                    throw new RuntimeException(String.format("Unexpected char '%c', no open bracket found:%n%s%n", c, script)
-                            + show_pos(new String[][]{new String[]{Integer.toString(pos), "close"}}));
+                    throw new RuntimeException(String.format("%nUnexpected char '%c', no open bracket found:%n", (char)c)
+                            + show_pos(script, new String[][]{new String[]{Integer.toString(pos), "close"}}));
                 } else {
+                    int eb = expected_braket(script);
+//                    System.out.println("c: " + (char)c + ", eb: " + (char)eb);
                     int start = brackets.pop();
-                    if (c == ')' && script.charAt(start) != '('
-                            || c == '}' && script.charAt(start) != '{'
-                            || c == ']' && script.charAt(start) != '[') {
-                        throw new RuntimeException(String.format("Unexpected char '%c', the brackets are unbalanced:%n%s%n", c, script)
-                                + show_pos(new String[][]{new String[]{Integer.toString(start), "open"}, new String[]{Integer.toString(pos), "close"}}));
+                    if (c != eb) {
+                        throw new RuntimeException(String.format("%nUnexpected char '%c', the brackets are unbalanced:%n", (char)c)
+                                + show_pos(script, new String[][]{new String[]{Integer.toString(start), "open"}, new String[]{Integer.toString(pos), "close"}}));
                     }
                 }
             }
@@ -214,19 +246,34 @@ public class Wizard {
         return false;
     }
     
-    private void parse_script(String script, int from_pos) {
+    private int expected_braket(String script) {
+        if(!brackets.isEmpty()) {
+            switch(script.charAt(brackets.peek())) {
+                case '(':
+                    return ')';
+                case '{':
+                    return '}';
+                case '[':
+                    return ']';
+            }
+        }
+        return 0;
+    } 
+    
+    private void parse_script_to_tree(String script, int from_pos) {
 
-        set_wait_for(TYPES, '/', '(', '{');
+        set_wait_for(TYPES, "/({");
 
         boolean[] wait_for_name = new boolean[1];
         boolean[] wait_for_wf = new boolean[1];
         int[] wait_for_wf_brakets_count = new int[1];
         StringBuilder sb = new StringBuilder();
+        int name_gen = 0;
         
-        cycles.clear();
+        tree.clear();
         
-        cycles.push(new Cycle());
-        cycles.peek().is_action = true;
+        tree.push(new Variable());
+        tree.peek().is_action = true;
         
         Supplier<Integer> begin_wait_for_name = () -> {
             wait_for_name[0] = true;
@@ -243,99 +290,131 @@ public class Wizard {
         
         for (int i = from_pos; i < script.length(); i++) {
             int c = script.charAt(i);
-            System.out.println(i + "> " + (char)c + " wf: " + 
-                    wf.stream().map(v -> "'" + String.valueOf((char)v.intValue()) + "'").collect(Collectors.joining(", ", "[", "]")) + 
-                    ", wait_for_name: " + Boolean.toString(wait_for_name[0]) + ", wait_for_wf: " + Boolean.toString(wait_for_wf[0]));
+//            System.out.println(i + "> " + (char)c + " wf: " + 
+//                    wf.stream().map(v -> "'" + String.valueOf((char)v.intValue()) + "'").collect(Collectors.joining(", ", "[", "]")) + 
+//                    ", wait_for_name: " + Boolean.toString(wait_for_name[0]) + ", wait_for_wf: " + Boolean.toString(wait_for_wf[0]));
             if (!Character.isSpaceChar(c)) {
                 if(wait_for_name[0]) {
-                    if(wf.contains((int)c)) {
-                        ((Variable)cycles.peek().variables.peek()).name = sb.toString();
+                    if(NONAME.contains(c)) {
+                        if (sb.length() == 0) {
+                            throw new RuntimeException(String.format("%nUnexpected char '%c':%n", (char) c)
+                                    + show_pos(script, new String[][]{new String[]{Integer.toString(i),
+                                "expecting: <name>"}}));
+                        }
+                        ((Variable) tree.peek().variables.peek()).name = sb.toString();
                         wait_for_name[0] = false;
                         i--;
+                        continue;
                     } else {
                         sb.append((char) c);
                     }
                 } else if(wait_for_wf[0]) {
-                    check_brackets(c, i, script);
-                    if(brackets.size() == wait_for_wf_brakets_count[0] && wf.contains((int)c)) {
+                    check_brackets(c, i);
+                    if(brackets.size() == wait_for_wf_brakets_count[0] && wf.contains(c)) {
                         if(c == ']') {
-                            ((Variable)cycles.peek().variables.peek()).lengths.push(sb.toString());
-                            set_wait_for('[', ',', ';', '/', '(', '{', ')', '}');
+                            tree.peek().variables.peek().lengths.push(new String[]{sb.length() == 0 ? "+" : sb.toString(), "$i" + Integer.toString(name_gen++)});
+                            set_wait_for("[,;/(){}");
                         } else if(c == ';') {
-                            cycles.peek().count = sb.toString();
-                            set_wait_for(TYPES, '/', '(', '{');
-                        } else {
-                            throw new RuntimeException(String.format("Unexpected char '%c', not supported yet:%n%s%n", c, script)
-                                    + show_pos(new String[][]{new String[]{Integer.toString(i)}}));
+                            tree.peek().lengths.add(new String[]{sb.toString(), "$i" + Integer.toString(name_gen++)});
+                            set_wait_for(TYPES, "/({");
                         }
                         wait_for_wf[0] = false;
                     } else {
                         sb.append((char)c);
                     }
                 } else {
-                    if(!wf.contains((int)c)) {
-                        throw new RuntimeException(String.format("Unexpected char '%c':%n%s%n", c, script)
-                                + show_pos(new String[][]{new String[]{Integer.toString(i), 
-                                    "expecting: " + wf.stream().map(v -> "'" + String.valueOf((int)v) + "'").
-                                            collect(Collectors.joining(", "))}}));
+                    if(!wf.contains(c)) {
+                        throw new RuntimeException(String.format("%nUnexpected char '%c':%n", (char)c)
+                                + show_pos(script, new String[][]{new String[]{Integer.toString(i), 
+                                    "expecting: " + wf.stream().map(v -> "'" + String.valueOf((char)v.intValue()) + "'").
+                                            collect(Collectors.joining(" | "))}}));
                     }
                     if(c == '(' || c == '{') {
-                        Cycle cy = new Cycle();
-                        cy.pos = i;
-                        cy.parent = cycles.peek();
-                        cy.parent.variables.add(cy);
-                        cycles.push(cy);
-                        cycles.peek().is_action = c == '{';
-                        for(Cycle p = cy.parent; p != null; p = p.parent) {
-                            if(!p.is_action) {
-                                throw new RuntimeException(String.
-                                        format("Unexpected char '%c', a \"loop-cycle\" is not allowed inside \"data-cycle\":%n%s%n", c, script) + 
-                                        show_pos(new String[][]{new String[]{
-                                            Integer.toString(p.pos), "\"data-cycle\" start"}, 
-                                            new String[]{Integer.toString(i), "\"loop-cycle\" start"}}));
+                        Variable var = new Variable();
+                        var.pos = i;
+                        tree.peek().variables.add(var);
+                        var.is_action = c == '{';
+                        if(var.is_action) {
+                            for(int j = tree.size() - 1; j >= 0; j--) {
+                                if(!tree.get(j).is_action) {
+                                    throw new RuntimeException(String.
+                                            format("%nUnexpected char '%c', a \"loop-cycle\" is not allowed inside \"data-cycle\":%n", (char)c) + 
+                                            show_pos(script, new String[][]{new String[]{
+                                                Integer.toString(tree.get(j).pos), "\"data-cycle\" start"}, 
+                                                new String[]{Integer.toString(i), "\"loop-cycle\" start"}}));
+                                }
                             }
                         }
+                        tree.push(var);
+                        check_brackets(c, i);
                         set_wait_for(';');
                         begin_wait_for_wf.get();
                     } else if(c == ',') {
                         Variable var = new Variable();
-                        var.type = ((Variable)cycles.peek().variables.peek()).type;
-                        cycles.peek().variables.push(var);
+                        var.type = ((Variable)tree.peek().variables.peek()).type;
+                        tree.peek().variables.push(var);
                         begin_wait_for_name.get();
-                        set_wait_for('[', ',', ';', '/', '(', '{', ')', '}');
+                        set_wait_for("[,;/(){}");
                     } else if(c == ';') {
                         Variable var = new Variable();
-                        cycles.peek().variables.push(var);
-                        set_wait_for(TYPES, '/', '(', '{', ')', '}');
+                        tree.peek().variables.push(var);
+                        set_wait_for(TYPES, "/(){}");
                     } else if(c == '/') {
                         Variable var = new Variable();
                         var.name = "/";
-                        cycles.peek().variables.push(var);
-                        set_wait_for(TYPES, '/', '(', '{', ')', '}');
+                        tree.peek().variables.push(var);
+                        set_wait_for(TYPES, "/(){}");
                     } else if(c == '[') {
                         set_wait_for(']');
                         begin_wait_for_wf.get();
-                        check_brackets(c, i, script);
-                    } else {
-                        if(!TYPES.contains(c)) {
-                            throw new RuntimeException(String.format("Unexpected char '%c':%n%s%n", c, script)
-                                    + show_pos(new String[][]{new String[]{Integer.toString(i),
-                                "expecting: " + wf.stream().map(v -> "'" + String.valueOf((int) v) + "'").
-                                collect(Collectors.joining(", "))}}));
+                        check_brackets(c, i);
+                    } else if(c == '}' || c == ')') {
+                        check_brackets(c, i);
+                        if(!tree.peek().is_action) {
+                            int num_vars = IntStream.range(0, tree.peek().variables.size()).map(v -> {
+                                if(!"/".equals(tree.peek().variables.get(v).name)) {
+                                    tree.peek().variable = v;
+                                    return 1;
+                                }
+                                return 0;
+                            }).sum();
+                            if(num_vars != 1) {
+                                tree.peek().variable = -1;
+                            }
+                            if(tree.peek().variable < 0) {
+                                tree.peek().type = "$T" + Integer.toBinaryString(name_gen++);
+                            }
                         }
+                        tree.pop();
+                        set_wait_for(TYPES, "/(){}");
+                    } else {
+                        assert TYPES.contains(c);
                         Variable var = new Variable();
                         var.type = String.valueOf((char)c);
-                        cycles.peek().variables.push(var);
+                        tree.peek().variables.push(var);
                         begin_wait_for_name.get();
-                        set_wait_for('[', ',', ';', '/', '(', '{', ')', '}');
+                        set_wait_for("[,;/(){}");
                     }
                 }
             } else {
-                if(wait_for_name[0]) {
-                    ((Variable)cycles.peek().variables.peek()).name = sb.toString();
+                if(wait_for_name[0] && sb.length() > 0) {
+                    ((Variable)tree.peek().variables.peek()).name = sb.toString();
                     wait_for_name[0] = false;
                 }
             }
+        }
+        if (wait_for_name[0]) {
+            ((Variable) tree.peek().variables.peek()).name = sb.toString();
+        }
+        if(wait_for_wf[0]) {
+            throw new RuntimeException(String.format("%nUnexpected end of script:%n")
+                    + show_pos(script, new String[][]{new String[]{Integer.toString(script.length()),
+                "expecting: " + (sb.length() == 0 ? "<expr> | " : "") + wf.stream().map(v -> "'" + String.valueOf((char)v.intValue()) + "'").
+                collect(Collectors.joining(" | "))}}));
+        }
+        if(!brackets.isEmpty()) {
+            throw new RuntimeException(String.format("%nend of script, no close bracket found:%n")
+                    + show_pos(script, new String[][]{new String[]{Integer.toString(brackets.peek()), "close"}}));
         }
     }
     
@@ -346,7 +425,7 @@ public class Wizard {
         String in_name = null;
         String outfile = null;
         String class_name = null;
-        String script = null;
+        script = null;
         boolean stdout = false;
         boolean force = false;
         
@@ -424,8 +503,32 @@ public class Wizard {
             i++;
         }
         
-        parse_script(script, i);
+        parse_script_to_tree(script, i);
         
-        System.out.println(cycles.peek());
+        System.out.println(tree.peek());
+        
+        sb_solve.delete(0, sb_solve.length());
+        sb_classes.delete(0, sb_classes.length());
+        index_gen = 0;
+        process_tree(0, tree.peek());
+        
+        
     }
+    
+    StringBuilder sb_solve = new StringBuilder();
+    int index_gen = 0;
+    StringBuilder sb_classes = new StringBuilder();
+    
+    private void process_tree(final int deep, final Variable var) {
+//        ArrayList<String> fields = new ArrayList<>();
+//        for(IVariable var: cy.variables) {
+//            if(var instanceof Cycle) {
+//                if(!((Cycle)var).is_action && ((Cycle)var).variable < 0) {
+//                    ((Cycle)var).class_name = "Cy" + Integer.toString(index_gen++);
+//                    fields.add(((Cycle)var).class_name + " " + );
+//                }
+//            }
+//        }
+    }
+
 }

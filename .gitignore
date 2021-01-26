@@ -6,3 +6,5 @@ dist
 presentation
 test/in
 test/out
+jacoco*
+.jacocoverage
