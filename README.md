@@ -35,28 +35,27 @@ Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data s
 The "input script" means the script on lightweight special language. This script follows the task input description.
 ### The Script Language Grammar
 
-    script                      ::=     ('+' | '?')? input-of-test
-    input-of-test               ::=     input-of-cycle
+    script                      ::=     ('+' | '?')? input-of-cycle
     input-of-cycle              ::=     cycle* (variables-group cycle+)* variables-group?
     cycle                       ::=     data-cycle | loop-cycle
-    data-cycle                  ::=     '(' <proper-java-expression> ';' input-of-cycle ')'
+    input-of-data-cycle         ::=     data-cycle* (variables-group data-cycle+)* variables-group?
+    data-cycle                  ::=     '(' (<proper-java-expression> | '+') ';' input-of-data-cycle ')'
     loop-cycle                  ::=     '{' (<proper-java-expression> | '+') ';' input-of-cycle '}'
-    variables-group             ::=     same-type-variables-group (';' same-type-variables-group | new-line)*
+    variables-group             ::=     new-line* same-type-variables-group (';' same-type-variables-group | new-line)*
     variable-name               ::=     <Java's  legal identifier>
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
     new-line                    ::=     '/'
     type                        ::=     'c' | 'i' | 'l' | 'd' | 's' | 't'
-    variable-definition         ::=     variable-name ('[' array-length? ']')?
-    array-length                ::=     <proper-java-expression>
+    variable-definition         ::=     variable-name ('[' (<proper-java-expression> | '+')? ']')?
     
-`'+'` at the beginning of script means that there are multiple test at each submission run, as the number of test itself does not matter the `'*'` is all one needs to support that case. Futher one codes as if there is only test at submission run.
+`'+'` at the beginning of script means that there are multiple test at each submission run. Futher one codes as if there is only test at submission run.
 
 `'?'` at the beginning of script means that there is a single test at one submission run, but multiple ones at a local testing. The production source will be generated for single test.
 
 `type` means type of variable, `'c'`, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `char` (casted to `int`), `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
 
-`data-cycle` means that a responsible data structure is created as array of objects.
+`data-cycle` means that a responsible data structure is created as array of objects.`'+'` means that the cycle repeats until end of input.
 
 `loop-cycle` means that a loop with local variables is created. `'+'` means that the cycle repeats until end of input.
 
