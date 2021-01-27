@@ -648,17 +648,16 @@ public class Wizard {
     }
     
     int index_gen = 0;
+    String pkg = null;
+    String src = null;
+    String in_dir = null;
+    String in_name = null;
+    String outfile = null;
+    String class_name = null;
+    boolean stdout = false;
+    boolean force = false;
 
     private void run(String[] args) throws IOException {
-        String pkg = null;
-        String src = null;
-        String in_dir = null;
-        String in_name = null;
-        String outfile = null;
-        String class_name = null;
-        script = null;
-        boolean stdout = false;
-        boolean force = false;
         
         for(int i = 0 ; i < args.length; i++) {
             if(args[i].startsWith("-")) {
