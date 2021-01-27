@@ -25,18 +25,20 @@ package net.leksi.contest;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeSet;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -201,11 +203,10 @@ public class Wizard {
             return sb == null ? "" : sb.toString();
         }
         
-        String render_class(String space) {
+        String render_class(String space, StringBuilder sb) {
             if(is_action || type.length() == 1 && TYPES.contains((int)type.charAt(0))) {
                 return null;
             }
-            StringBuilder sb = new StringBuilder();
             sb.append(space).append("static class ").append(type).append(" {\n");
             variables.forEach(v -> {
                 if(v.type != null) {
@@ -246,7 +247,9 @@ public class Wizard {
             for(String[] v: lengths) {
                 if(!"+".equals(v[0])) {
                     len_pos++;
-                    write_code_banner(space, sb);
+                    if(is_action) {
+                        write_code_banner(space, sb);
+                    }
                     sb.append(space).append("for(int ").append(v[1]).
                             append(" = 0; ").append(get_render_condition(v)).
                             append("; ").append(v[1]).append("++) {\n");
@@ -272,7 +275,9 @@ public class Wizard {
             }
             for(String[] v: lengths) {
                 if(!"+".equals(v[0])) {
-                    write_code_banner(space, sb);
+                    if (is_action) {
+                        write_code_banner(space, sb);
+                    }
                     space = space.substring(0, space.length() - TAB_LEN);
                     sb.append(space).append("}\n");
                 } else {
@@ -464,6 +469,7 @@ public class Wizard {
         int name_gen = 0;
         
         tree.clear();
+        classes.clear();
         
         tree.push(new Variable());
         tree.peek().is_action = true;
@@ -598,6 +604,7 @@ public class Wizard {
                             if(variable[0] < 0) {
                                 tree.peek().type = "$T" + Integer.toString(name_gen++);
                                 tree.peek().name = "$f" + Integer.toString(name_gen++);
+                                classes.add(tree.peek());
                             } else {
                                 tree.peek().type = tree.peek().variables.get(variable[0]).type;
                                 tree.peek().name = tree.peek().variables.get(variable[0]).name;
@@ -648,17 +655,25 @@ public class Wizard {
     }
     
     int index_gen = 0;
+    String pkg = null;
+    String src = null;
+    String in_dir = null;
+    String in_name = null;
+    String outfile = null;
+    String class_name = null;
+    boolean stdout = false;
+    boolean force = false;
+    ArrayList<Variable> classes = new ArrayList<>();
 
     private void run(String[] args) throws IOException {
-        String pkg = null;
-        String src = null;
-        String in_dir = null;
-        String in_name = null;
-        String outfile = null;
-        String class_name = null;
-        script = null;
-        boolean stdout = false;
-        boolean force = false;
+        pkg = null;
+        src = null;
+        in_dir = null;
+        in_name = null;
+        outfile = null;
+        class_name = null;
+        stdout = false;
+        force = false;
         
         for(int i = 0 ; i < args.length; i++) {
             if(args[i].startsWith("-")) {
@@ -692,7 +707,6 @@ public class Wizard {
                 class_name = args[i];
             } else if(script == null) {
                 script = args[i];
-                System.out.println("---------------- " + script + " ----------------");
             } else {
                 usage();
                 return;
@@ -723,8 +737,9 @@ public class Wizard {
             }
         }
         
-        boolean[] singleTest = new boolean[]{true};
-        boolean[] localMultiTest = new boolean[]{false};
+        singleTest[0] = true;
+        localMultiTest[0] = false;
+
         int i = 0;
         if(script.charAt(0) == '+') {
             singleTest[0] = false;
@@ -743,6 +758,18 @@ public class Wizard {
         
         StringBuilder sb = new StringBuilder();
 
+        
+        generate_code(sb);
+        
+        render_code(args, sb);
+        
+    }
+
+    boolean[] singleTest = new boolean[]{true};
+    boolean[] localMultiTest = new boolean[]{false};
+    int saved_code_pos = -1;
+    
+    private void generate_code(StringBuilder sb) {
         String banner = "!Please, Don't change or delete this comment!";
         String script1 = "$script$:" + script;
         int max_len = Math.max(script.length(), banner.length());
@@ -779,9 +806,165 @@ public class Wizard {
             sb.append("        /*-Preprocess-DONOTCOPY*/\n");
         }
         sb.append("    }\n");
-        tree.peek().render_process(TAB_SPACE, sb);
-        write_code_banner(TAB_SPACE, sb);
+        classes.forEach(v -> {
+            v.render_class("    ", sb);
+        });
+        sb.append("    @Override\n");
+        sb.append("    public void solve() throws IOException {\n");
+        tree.peek().render_process("        ", sb);
+        write_code_banner("        ", sb);
+        saved_code_pos = sb.length();
         sb.append("    }\n");
+        sb.append("    static public void main(String[] args) throws IOException {\n");
+        sb.append("        new ").append(class_name).append("().run();\n");
+        sb.append("    }\n");
+        sb.append("}\n");
+    }
+
+    private void render_code(String[] args, StringBuilder sb) throws IOException {
+        if (!stdout) {
+            File src_file = null;
+            if (outfile == null) {
+                src_file = new File(src);
+                if (pkg != null) {
+                    for (String part : pkg.split("\\.")) {
+                        src_file = new File(src_file, part);
+                    }
+                }
+                //        System.out.println(src_file);
+                if (!src_file.exists()) {
+                    src_file.mkdirs();
+                }
+                src_file = new File(src_file, class_name + ".java");
+                if (!force && src_file.exists()) {
+                    throw new IOException("File exists: " + src_file + "! Use -force to overwrite.");
+                }
+
+                if (src_file.exists()) {
+                    File save = null;
+                    for (int j = 1;; j++) {
+                        save = new File(src_file.getPath() + ";" + Integer.toString(j));
+                        if (!save.exists()) {
+                            break;
+                        }
+                    }
+                    src_file.renameTo(save);
+                    String script2 = null;
+                    try (
+                            FileReader fr = new FileReader(save);
+                            BufferedReader br = new BufferedReader(fr);) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            if (line.contains("$script$:")) {
+                                script2 = line.trim();
+                                script2 = script2.substring(script2.indexOf("/*"));
+                                script2 = script2.substring(0, script2.lastIndexOf("*/"));
+                                script2 = script2.trim();
+                                script2 = script2.substring(script2.indexOf("$script$:") + "$script$:".length());
+                                script2 = script2.trim();
+                                break;
+                            }
+                        }
+                    }
+                    if (script2 != null) {
+                        String[] args1 = new String[args.length + 2];
+                        for (int j = 0; j < args.length; j++) {
+                            if (args[j].equals(script)) {
+                                args1[j] = script2;
+                            } else {
+                                args1[j] = args[j];
+                            }
+                        }
+                        args1[args.length] = "-outfile";
+                        File tmp = File.createTempFile("temp", null);
+                        tmp.deleteOnExit();
+                        args1[args.length + 1] = tmp.getAbsolutePath();
+                        try {
+                            new Wizard().run(args1);
+                            StringBuilder sb2 = new StringBuilder();
+
+                            try (
+                                    FileReader fr = new FileReader(save);
+                                    BufferedReader br = new BufferedReader(fr);
+                                    FileReader fr_tmp = new FileReader(tmp);
+                                    BufferedReader br_tmp = new BufferedReader(fr_tmp);) {
+                                String line;
+                                String line_tmp = null;
+                                boolean stopped = false;
+                                boolean stopped_tmp = false;
+                                ArrayList<String> saved_code = new ArrayList<>();
+                                while (!stopped) {
+                                    if (!stopped_tmp) {
+                                        String line1 = br_tmp.readLine();
+                                        if (line1 == null) {
+                                            stopped_tmp = true;
+                                        } else {
+                                            if ("".equals(line1.trim())) {
+                                                continue;
+                                            }
+                                            line_tmp = line1;
+                                        }
+                                    }
+                                    while (!stopped) {
+                                        String line1 = br.readLine();
+                                        if (line1 == null) {
+                                            stopped = true;
+                                            break;
+                                        }
+                                        line = line1;
+                                        if (line.trim().equals(line_tmp.trim())) {
+                                            if (sb2.toString().trim().length() > 0) {
+                                                saved_code.add(sb2.toString());
+                                                sb2.delete(0, sb2.length());
+                                            }
+                                            break;
+                                        }
+                                        sb2.append(line).append("\n");
+                                    }
+                                }
+                                if (sb2.toString().trim().length() > 0) {
+                                    saved_code.add(sb2.toString());
+                                    sb2.delete(0, sb2.length());
+                                }
+                                for (int j = 0; j < saved_code.size(); j++) {
+                                    sb2.append("\n");
+                                    sb2.append("        /**** begin of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                    sb2.append(saved_code.get(j));
+                                    sb2.append("        /**** end of piece #").append(j + 1).append("/").append(saved_code.size()).append(" of saved code ****/\n");
+                                    sb2.append("\n");
+                                }
+                                if (sb2.length() > 0) {
+                                    sb.insert(saved_code_pos, sb2.toString());
+                                }
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("Can not find changes. See previous version at " + save);
+                        }
+                    }
+                }
+
+                File in_file = new File(in_dir);
+                if (!in_file.exists()) {
+                    in_file.mkdirs();
+                }
+                in_file = new File(in_dir, in_name);
+                if (!in_file.exists()) {
+                    try (
+                            FileWriter fw = new FileWriter(in_file);) {
+                        fw.write("");
+                    }
+                }
+            } else {
+                src_file = new File(outfile);
+            }
+            try (
+                    FileWriter fw = new FileWriter(src_file);) {
+                fw.write(sb.toString());
+            }
+
+        } else {
+            System.out.println(sb);
+        }
     }
 
 }

@@ -35,7 +35,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -96,6 +95,7 @@ public class WizardTest {
         System.out.println("main");
         String[] args = new String[]{"-stdout", "A", null};
         File in = new File("F:\\leksi\\contests\\codeforces.com\\archive_problems\\src");
+//        File in = new File("C:\\Users\\leksi\\Documents\\leksi\\contests\\codeforces.com\\archive_problems\\src");
         walk_files(in, f -> {
             try(
                     FileReader fr = new FileReader(f);
