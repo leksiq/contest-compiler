@@ -46,7 +46,7 @@ The "input script" means the script on lightweight special language. This script
     same-type-variables-group   ::=     type variable-definition (',' variable-definition)*
     new-line                    ::=     '/'
     type                        ::=     'c' | 'i' | 'l' | 'd' | 's' | 't'
-    variable-definition         ::=     variable-name ('[' (<proper-java-expression> | '+')? ']')?
+    variable-definition         ::=     variable-name ('[' <proper-java-expression>? ']')?
     
 `'+'` at the beginning of script means that there are multiple test at each submission run. Futher one codes as if there is only test at submission run.
 
@@ -55,7 +55,7 @@ The "input script" means the script on lightweight special language. This script
 `type` means type of variable, `'c'`, `'i'`, `'l'`, `'d'`, `'s'`, `'t'` stand for `char` (casted to `int`), `int`, `long`, `double`, `java.lang.String` and `Token` (`java.lang.String` before next space or end of line) respectively.
 if the variable is an array its definition should end with `'['`, optional `length` and `']'`, if the `length` is present the variable will take exactly `length` elements from iunput, otherwise the variable will take all elements till the end of line. So, one should not use `length` in the case the array implied to take all the line.
 
-`data-cycle` means that a responsible data structure is created as array of objects.`'+'` means that the cycle repeats until end of input.
+`data-cycle` means that a responsible data structure is created as array of objects.
 
 `loop-cycle` means that a loop with local variables is created. `'+'` means that the cycle repeats until end of input.
 

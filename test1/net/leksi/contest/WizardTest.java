@@ -76,6 +76,7 @@ public class WizardTest {
     }
 
     String[] scripts = new String[] {
+        "?in/ia[n][m][k][]",
         "+in(n;i)",
         "+n",
         "+in/{n;ix)",

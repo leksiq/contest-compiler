@@ -136,11 +136,15 @@ public abstract class Solver {
     }
 
     protected int[] lineToIntArray() throws IOException {
-        return Arrays.stream(lineToArray()).mapToInt(Integer::valueOf).toArray();
+        return Arrays.stream(lineToArray()).mapToInt(Integer::parseInt).toArray();
     }
 
     protected long[] lineToLongArray() throws IOException {
-        return Arrays.stream(lineToArray()).mapToLong(Long::valueOf).toArray();
+        return Arrays.stream(lineToArray()).mapToLong(Long::parseLong).toArray();
+    }
+    
+    protected double[] lineToDoubleArray() throws IOException {
+        return Arrays.stream(lineToArray()).mapToDouble(Double::parseDouble).toArray();
     }
     
     protected void run() throws IOException {

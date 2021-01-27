@@ -24,19 +24,19 @@
 package net.leksi.contest;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Stack;
-import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -51,7 +51,12 @@ public class Wizard {
     
     static public void main(final String[] args) throws IOException {
         new Wizard().run(args);
-//        new Wizard().run(new String[]{"-stdout", "A", "{+;ss/}"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/(n;(m;ia[k][]/)/)"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/(n;ia[m])"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m]"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[]"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][]"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
     }
 
     private static void usage() {
@@ -69,6 +74,9 @@ public class Wizard {
         System.out.println("    class-name:             name of class to generate;");
         System.out.println("    script:                 input script;");
     }
+    
+    static final int TAB_LEN = 4;
+    static final String TAB_SPACE = String.format("%" + TAB_LEN + "s", "");
 
     private void version() {
         try {
@@ -146,14 +154,24 @@ public class Wizard {
         return sb.toString();
     }
     
+    static void write_code_banner(String space, StringBuilder sb) {
+        sb.append(space).append("/**************************/\n");
+        sb.append(space).append("/* Write your code below. */\n");
+        sb.append(space).append("/*vvvvvvvvvvvvvvvvvvvvvvvv*/\n");
+        sb.append(space).append("\n");
+        sb.append(space).append("/*^^^^^^^^^^^^^^^^^^^^^^^^*/\n");
+    }
+    
     static class Variable {
+        static boolean line_read = false;
         String type = null;
         String name = null;
         Stack<String[]> lengths = new Stack<>();
         Stack<Variable> variables = new Stack<>();
         int pos = 0;
-        int variable = -1;
         boolean is_action = false;
+        boolean is_field = false;
+        Variable parent = null;
         
         @Override
         public String toString() {
@@ -165,20 +183,197 @@ public class Wizard {
                 type == null ? "-" : type, 
                 name == null ? "-" : name, 
                 lengths.stream().map(v -> "(" + v[0] + ", " + v[1] + ")").collect(Collectors.joining(", ", "[", "]")),
-                IntStream.range(0, variables.size()).mapToObj(i -> (i == variable ? "*" : "") + variables.get(i).toString()).collect(Collectors.joining(","))
+                IntStream.range(0, variables.size()).mapToObj(i -> variables.get(i).toString()).collect(Collectors.joining(","))
             );
         }
-        String render_class(final int indention) {
-            if(is_action || TYPES.contains(type)) {
+        
+        String get_path() {
+            StringBuilder sb = null;
+            for(Variable p = parent; p != null && !p.is_action; p = p.parent) {
+                if(sb == null) {
+                    sb = new StringBuilder();
+                }
+                if(p != parent && sb.charAt(0) != '[') {
+                    sb.insert(0, ".");
+                }
+                sb.insert(0, (!"0".equals(p.name) && !"&".equals(p.name) ? p.name : "") + p.lengths.stream().map(v -> ("+".equals(v[0]) ? "" : "[" + v[1] + "]")).collect(Collectors.joining()));
+            }
+            return sb == null ? "" : sb.toString();
+        }
+        
+        String render_class(String space) {
+            if(is_action || type.length() == 1 && TYPES.contains((int)type.charAt(0))) {
                 return null;
             }
-            if(variable > 0) {
-                return variables.get(variable).render_class(indention);
-            }
             StringBuilder sb = new StringBuilder();
-            
+            sb.append(space).append("static class ").append(type).append(" {\n");
+            variables.forEach(v -> {
+                if(v.type != null) {
+                    sb.append(space).append(TAB_SPACE).append(v.get_render_type()).
+                            append(" ").append(v.name).append(";\n");
+                }
+            });
+            sb.append(space).append("}\n");
             return sb.toString();
         }
+        
+        void render_process(String space, StringBuilder sb) {
+            if(!is_action) {
+                if("/".equals(name)) {
+                    if(!line_read) {
+                        sb.append(space).append("sc.nextLine();\n");
+                    }
+                } else {
+                    sb.append(space);
+                    if(!is_field) {
+                        sb.append(get_render_type()).append(" ");
+                    } else {
+                        String path = get_path();
+                        if(path != null) {
+                            sb.append(path);
+                            if(!"&".equals(name) && !"0".equals(name)) {
+                                sb.append(".");
+                            }
+                        }
+                    }
+                    if(!"&".equals(name) && !"0".equals(name)) {
+                        sb.append(name);
+                    }
+                    sb.append(" = ").append(get_render_init()).append(";\n");
+                }
+            }
+            int len_pos = -1;
+            for(String[] v: lengths) {
+                if(!"+".equals(v[0])) {
+                    len_pos++;
+                    write_code_banner(space, sb);
+                    sb.append(space).append("for(int ").append(v[1]).
+                            append(" = 0; ").append(get_render_condition(v)).
+                            append("; ").append(v[1]).append("++) {\n");
+                    space += TAB_SPACE;
+                } else {
+                    break;
+                }
+            }
+            if(!variables.isEmpty()) {
+                for(Variable v: variables) {
+                    v.render_process(space, sb);
+                }
+            } else {
+                if(len_pos >= 0) {
+                    Variable var = new Variable();
+                    var.type = type;
+                    var.parent = this;
+                    var.name = "&";
+                    var.is_field = true;
+                    var.lengths.addAll(lengths.subList(len_pos + 1, lengths.size()));
+                    var.render_process(space, sb);
+                }
+            }
+            for(String[] v: lengths) {
+                if(!"+".equals(v[0])) {
+                    write_code_banner(space, sb);
+                    space = space.substring(0, space.length() - TAB_LEN);
+                    sb.append(space).append("}\n");
+                } else {
+                    break;
+                }
+            }
+        }
+
+        String get_render_condition(String[] v) {
+            return v[1] + " < " + v[0];
+        }
+        
+        String get_render_init() {
+            if(lengths.isEmpty()) {
+                switch (type) {
+                    case "c":
+                        return "sc.nextChar()";
+                    case "i":
+                        return "sc.nextInt()";
+                    case "l":
+                        return "sc.nextLong()";
+                    case "d":
+                        return "sc.nextDouble()";
+                    case "s":
+                        line_read = true;
+                        return "sc.nextLine()";
+                    case "t":
+                        return "sc.next()";
+                    default:
+                        return "new " + type + "()";
+                }
+            }
+            if("+".equals(lengths.get(0)[0])) {
+                switch (type) {
+                    case "c":
+                        line_read = true;
+                        return "lineToCharArray()";
+                    case "i":
+                        line_read = true;
+                        return "lineToIntArray()";
+                    case "l":
+                        line_read = true;
+                        return "lineToLongArray()";
+                    case "d":
+                        line_read = true;
+                        return "lineToDoubleArray()";
+                    case "t":
+                        line_read = true;
+                        return "lineToArray()";
+                }
+            }
+            int rest_dimentions = get_dimensions() - lengths.size();
+            return "new " + get_render_scalar_type() + 
+                    lengths.stream().map(v -> "[" + (!"+".equals(v[0]) ? v[0] : "") + "]").collect(Collectors.joining()) +
+                    (rest_dimentions == 0 ? "" : String.format("%" + rest_dimentions + "s", "").replace(" ", "[]"));
+        }
+        
+        int get_dimensions() {
+            int len = lengths.size();
+            if(type.length() == 1 && TYPES.contains((int)type.charAt(0))) {
+                Variable p = this;
+                while(p != null) {
+                    boolean found = false;
+                    for(Variable v: p.variables) {
+                        if("0".equals(v.name) || "&".equals(v.name)) {
+                            len += v.lengths.size();
+                            p = v;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found) {
+                        break;
+                    }
+                }
+            }
+            return len;
+        }
+
+        String get_render_type() {
+            int len = get_dimensions();
+            return String.format("%s%" + (len == 0 ? "" : len) + "s", get_render_scalar_type(), "").replace(" ", "[]");
+        }
+
+        String get_render_scalar_type() {
+            switch(type) {
+                case "c":
+                case "i":
+                    return "int";
+                case "l":
+                    return "long";
+                case "d":
+                    return "double";
+                case "s":
+                case "t":
+                    return "String";
+                default:
+                    return type;
+            }
+        }
+
     }
 
     static final TreeSet<Integer> BRAKETS = new TreeSet<Integer>() {
@@ -224,7 +419,6 @@ public class Wizard {
     
     private boolean check_brackets(int c, int pos) {
         if(BRAKETS.contains(c)) {
-//            System.out.println("brakets: " + brackets.stream().map(v -> "'" + script.charAt(v) + "'").collect(Collectors.joining(", ", "[", "]")));
             if(c == '(' || c == '{' || c == '[') {
                 brackets.push(pos);
             } else {
@@ -233,7 +427,6 @@ public class Wizard {
                             + show_pos(script, new String[][]{new String[]{Integer.toString(pos), "close"}}));
                 } else {
                     int eb = expected_braket(script);
-//                    System.out.println("c: " + (char)c + ", eb: " + (char)eb);
                     int start = brackets.pop();
                     if (c != eb) {
                         throw new RuntimeException(String.format("%nUnexpected char '%c', the brackets are unbalanced:%n", (char)c)
@@ -332,6 +525,8 @@ public class Wizard {
                     if(c == '(' || c == '{') {
                         Variable var = new Variable();
                         var.pos = i;
+                        var.is_field = !tree.peek().is_action;
+                        var.parent = tree.peek();
                         tree.peek().variables.add(var);
                         var.is_action = c == '{';
                         if(var.is_action) {
@@ -352,11 +547,16 @@ public class Wizard {
                     } else if(c == ',') {
                         Variable var = new Variable();
                         var.type = ((Variable)tree.peek().variables.peek()).type;
+                        var.is_field = !tree.peek().is_action;
+                        var.parent = tree.peek();
                         tree.peek().variables.push(var);
                         begin_wait_for_name.get();
                         set_wait_for("[,;/(){}");
                     } else if(c == ';') {
                         Variable var = new Variable();
+                        var.type = ";";
+                        var.is_field = !tree.peek().is_action;
+                        var.parent = tree.peek();
                         tree.peek().variables.push(var);
                         set_wait_for(TYPES, "/(){}");
                     } else if(c == '/') {
@@ -365,33 +565,62 @@ public class Wizard {
                         tree.peek().variables.push(var);
                         set_wait_for(TYPES, "/(){}");
                     } else if(c == '[') {
+                        if("s".equals(tree.peek().variables.peek().type)) {
+                            throw new RuntimeException(String.format("%nUnexpected char '%c':%n", (char)c)
+                                    + show_pos(script, new String[][]{new String[]{Integer.toString(i), 
+                                        "Array of type 's' is ambiguous and unsupported."}}) + 
+                                    "\nTo get an array of tokens till the end of line use type 't' instead" +
+                                    "\nTo get an array of Strings till the end of input use type {+;ss/} instead and fill a list by your code\n" 
+                                    );
+                        }
+                        if(!tree.peek().variables.peek().lengths.isEmpty() && "+".equals(tree.peek().variables.peek().lengths.peek()[0])) {
+                            throw new RuntimeException(String.format("%nUnexpected char '%c':%n", (char) c)
+                                    + show_pos(script, new String[][]{new String[]{Integer.toString(i),
+                                "Array can have only last undefined dimension."}}));
+                        }
                         set_wait_for(']');
                         begin_wait_for_wf.get();
                         check_brackets(c, i);
                     } else if(c == '}' || c == ')') {
                         check_brackets(c, i);
                         if(!tree.peek().is_action) {
+                            int[] variable = new int[]{-1};
                             int num_vars = IntStream.range(0, tree.peek().variables.size()).map(v -> {
                                 if(!"/".equals(tree.peek().variables.get(v).name)) {
-                                    tree.peek().variable = v;
+                                    variable[0] = v;
                                     return 1;
                                 }
                                 return 0;
                             }).sum();
                             if(num_vars != 1) {
-                                tree.peek().variable = -1;
+                                variable[0] = -1;
                             }
-                            if(tree.peek().variable < 0) {
-                                tree.peek().type = "$T" + Integer.toBinaryString(name_gen++);
+                            if(variable[0] < 0) {
+                                tree.peek().type = "$T" + Integer.toString(name_gen++);
+                                tree.peek().name = "$f" + Integer.toString(name_gen++);
+                            } else {
+                                tree.peek().type = tree.peek().variables.get(variable[0]).type;
+                                tree.peek().name = tree.peek().variables.get(variable[0]).name;
+                                if(tree.peek().variables.get(variable[0]).variables.isEmpty()) {
+                                    tree.peek().variables.get(variable[0]).name = "&";
+                                } else {
+                                    tree.peek().variables.get(variable[0]).name = "0";
+                                }
                             }
                         }
                         tree.pop();
                         set_wait_for(TYPES, "/(){}");
                     } else {
                         assert TYPES.contains(c);
-                        Variable var = new Variable();
-                        var.type = String.valueOf((char)c);
-                        tree.peek().variables.push(var);
+                        if(!tree.peek().variables.isEmpty() && ";".equals(tree.peek().variables.peek().type)) {
+                            tree.peek().variables.peek().type = String.valueOf((char)c);
+                        } else {
+                            Variable var = new Variable();
+                            var.type = String.valueOf((char)c);
+                            var.is_field = !tree.peek().is_action;
+                            var.parent = tree.peek();
+                            tree.peek().variables.push(var);
+                        }
                         begin_wait_for_name.get();
                         set_wait_for("[,;/(){}");
                     }
@@ -418,6 +647,8 @@ public class Wizard {
         }
     }
     
+    int index_gen = 0;
+
     private void run(String[] args) throws IOException {
         String pkg = null;
         String src = null;
@@ -461,6 +692,7 @@ public class Wizard {
                 class_name = args[i];
             } else if(script == null) {
                 script = args[i];
+                System.out.println("---------------- " + script + " ----------------");
             } else {
                 usage();
                 return;
@@ -505,30 +737,51 @@ public class Wizard {
         
         parse_script_to_tree(script, i);
         
-        System.out.println(tree.peek());
         
-        sb_solve.delete(0, sb_solve.length());
-        sb_classes.delete(0, sb_classes.length());
         index_gen = 0;
-        process_tree(0, tree.peek());
+        Variable.line_read = false;
         
-        
-    }
-    
-    StringBuilder sb_solve = new StringBuilder();
-    int index_gen = 0;
-    StringBuilder sb_classes = new StringBuilder();
-    
-    private void process_tree(final int deep, final Variable var) {
-//        ArrayList<String> fields = new ArrayList<>();
-//        for(IVariable var: cy.variables) {
-//            if(var instanceof Cycle) {
-//                if(!((Cycle)var).is_action && ((Cycle)var).variable < 0) {
-//                    ((Cycle)var).class_name = "Cy" + Integer.toString(index_gen++);
-//                    fields.add(((Cycle)var).class_name + " " + );
-//                }
-//            }
-//        }
+        StringBuilder sb = new StringBuilder();
+
+        String banner = "!Please, Don't change or delete this comment!";
+        String script1 = "$script$:" + script;
+        int max_len = Math.max(script.length(), banner.length());
+        if(banner.length() < max_len) {
+            banner = String.format("%" + (max_len - banner.length()) / 2 + "s", "") + banner;
+            banner += String.format("%" + (max_len - banner.length()) + "s", "");
+        } else if(script1.length() < max_len) {
+            script1 = String.format("%" + (max_len - script1.length()) / 2 + "s", "") + script1;
+            script1 += String.format("%" + (max_len - script1.length()) + "s", "");
+        }
+        String stars = String.format("%" + max_len + "s", "").replace(" ", "*");
+        sb.append("/*").append(stars).append("*/\n");
+        sb.append("/*").append(banner).append("*/\n");
+        sb.append("/*").append(script1).append("*/\n");
+        sb.append("/*").append(stars).append("*/\n");
+        if(pkg != null) {
+            sb.append("package ").append(pkg).append(";\n");
+        }
+        sb.append("import java.io.IOException;\n");
+        sb.append("import net.leksi.contest.Solver;\n");
+        sb.append("public class ").append(class_name).append(" extends Solver {\n");
+        sb.append("    public ").append(class_name).append("() {\n");
+        if(singleTest[0]) {
+            sb.append("        singleTest = ").append(singleTest[0]).append(";\n");
+        }
+        if(!stdout || localMultiTest[0]) {
+            sb.append("        /*+Preprocess-DONOTCOPY*/\n");
+            if(!stdout) {
+                sb.append("        localNameIn = \"").append(new File(in_dir, in_name).getPath().replace("\\", "/")).append("\";\n");
+            }
+            if(localMultiTest[0]) {
+                sb.append("        localMultiTest = true;\n");
+            }
+            sb.append("        /*-Preprocess-DONOTCOPY*/\n");
+        }
+        sb.append("    }\n");
+        tree.peek().render_process(TAB_SPACE, sb);
+        write_code_banner(TAB_SPACE, sb);
+        sb.append("    }\n");
     }
 
 }
