@@ -1,34 +1,30 @@
-/*
- *      The task: 
- *
- *      https://codeforces.com/problemset/problem/1417/A
- */
+/***********************************************/
+/*!Please, Don't change or delete this comment!*/
+/*             $script$:+in,k/ia[]             */
+/***********************************************/
 import java.io.IOException;
-import net.leksi.contest.Solver;
 import java.util.Arrays;
+import net.leksi.contest.Solver;
 import net.leksi.contest.demo.IntArraySorter;
 public class p001417A extends Solver {
     public p001417A() {
-        nameIn = "demo/p001417A.in"; singleTest = false;
+        /*+Preprocess-DONOTCOPY*/
+        localNameIn = "demo/p001417A.in";
+        /*-Preprocess-DONOTCOPY*/
     }
-    /*
-     * Generated from "*in,k/ia[]".
-     */
     @Override
     public void solve() throws IOException {
-        int n;
-        int k;
-        int[] a;
-        n = sc.nextInt();
-        k = sc.nextInt();
+        int n = sc.nextInt();
+        int k = sc.nextInt();
         sc.nextLine();
-        a = lineToIntArray();
-        /*
-         * Write your code below.
-         */
+        int[] a = lineToIntArray();
+        /**************************/
+        /* Write your code below. */
+        /*vvvvvvvvvvvvvvvvvvvvvvvv*/
         IntArraySorter.sort(a);
         int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();
         pw.println(res);
+        /*^^^^^^^^^^^^^^^^^^^^^^^^*/
     }
     static public void main(String[] args) throws IOException {
         new p001417A().run();
