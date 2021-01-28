@@ -93,7 +93,7 @@ public class WizardTest {
     @Test
     public void testMain() throws Exception {
         System.out.println("main");
-        String[] args = new String[]{"-stdout", "A", null};
+        String[] args = new String[]{"-src", "test/out", "-in", "test/in", "", "", "-force"};
         File in = new File("F:\\leksi\\contests\\codeforces.com\\archive_problems\\src");
 //        File in = new File("C:\\Users\\leksi\\Documents\\leksi\\contests\\codeforces.com\\archive_problems\\src");
         walk_files(in, f -> {
@@ -111,7 +111,9 @@ public class WizardTest {
                             if(pos >= 0) {
                                 line = line.substring(0, pos).trim();
                             }
-                            args[2] = line;
+                            args[4] = f.getName().replace(".java", "");
+                            args[5] = line;
+                            System.out.println(f + " " + args[5]);
                             try {
                                 System.out.println(line);
                                 Wizard.main(args);
@@ -127,13 +129,15 @@ public class WizardTest {
                 Logger.getLogger(WizardTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        for(String script: scripts) {
-            args[2] = script;
+        for(int i = 0; i < scripts.length; i++) {
+            args[4] = "z00" + i;
+            args[5] = scripts[i];
+            System.out.println(args[4] + " " + args[5]);
             try {
-                System.out.println(script);
+                System.out.println(scripts[i]);
                 Wizard.main(args);
             } catch (Exception ex){
-                System.err.println(script);
+                System.err.println(scripts[i]);
                 System.err.println(ex);
             }
         }

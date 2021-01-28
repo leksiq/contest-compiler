@@ -1,43 +1,36 @@
-/*
- *      The task: 
- *
- *      https://codeforces.com/problemset/problem/1284/A
- */
+/***********************************************/
+/*!Please, Don't change or delete this comment!*/
+/*     $script$:in,m/ts[]/tt[]/iq/(q;iy/)      */
+/***********************************************/
 import java.io.IOException;
 import net.leksi.contest.Solver;
 public class p001284A extends Solver {
     public p001284A() {
-        nameIn = "demo/p001284A.in"; singleTest = true;
+        singleTest = true;
+        /*+Preprocess-DONOTCOPY*/
+        localNameIn = "demo/p001284A.in";
+        /*-Preprocess-DONOTCOPY*/
     }
-    /*
-     * Generated from "in,m/ss[]/st[]/iq/(q;iy/)".
-     */
+    @Override
     public void solve() throws IOException {
-        int n;
-        int m;
-        String[] s;
-        String[] t;
-        int q;
-        int[] y;
-        n = sc.nextInt();
-        m = sc.nextInt();
+        int n = sc.nextInt();
+        int m = sc.nextInt();
         sc.nextLine();
-        s = sc.nextLine().trim().split("\\s+");
-        t = sc.nextLine().trim().split("\\s+");
-        q = sc.nextInt();
-        sc.nextLine();
-        y = new int[q];
-        for(int _iy = 0; _iy < q; _iy++) {
-            y[_iy] = sc.nextInt();
-            sc.nextLine();
+        String[] s = lineToArray();
+        String[] t = lineToArray();
+        int q = sc.nextInt();
+        int[] y = new int[q];
+        for(int $i2 = 0; $i2 < q; $i2++) {
+            y[$i2] = sc.nextInt();
         }
-        /*
-         * Write your code below.
-         */
+        /**************************/
+        /* Write your code below. */
+        /*vvvvvvvvvvvvvvvvvvvvvvvv*/
         for (int i = 0; i < q; i++) {
             String st = s[(y[i] - 1) % n] + t[(y[i] - 1) % m];
             pw.println(st);
         }
+        /*^^^^^^^^^^^^^^^^^^^^^^^^*/
     }
     static public void main(String[] args) throws IOException {
         new p001284A().run();
