@@ -663,17 +663,8 @@ public class Wizard {
     String class_name = null;
     boolean stdout = false;
     boolean force = false;
-    ArrayList<Variable> classes = new ArrayList<>();
 
     private void run(String[] args) throws IOException {
-        pkg = null;
-        src = null;
-        in_dir = null;
-        in_name = null;
-        outfile = null;
-        class_name = null;
-        stdout = false;
-        force = false;
         
         for(int i = 0 ; i < args.length; i++) {
             if(args[i].startsWith("-")) {
@@ -768,6 +759,7 @@ public class Wizard {
     boolean[] singleTest = new boolean[]{true};
     boolean[] localMultiTest = new boolean[]{false};
     int saved_code_pos = -1;
+    ArrayList<Variable> classes = new ArrayList<>();
     
     private void generate_code(StringBuilder sb) {
         String banner = "!Please, Don't change or delete this comment!";
