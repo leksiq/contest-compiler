@@ -59,6 +59,7 @@ public class Wizard {
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?ca[]/ik"});
     }
 
     private static void usage() {
@@ -223,6 +224,7 @@ public class Wizard {
                 if("/".equals(name)) {
                     if(!line_read) {
                         sb.append(space).append("sc.nextLine();\n");
+                        line_read = true;
                     }
                 } else {
                     sb.append(space);
@@ -294,17 +296,22 @@ public class Wizard {
             if(lengths.isEmpty()) {
                 switch (type) {
                     case "c":
+                        line_read = false;
                         return "sc.nextChar()";
                     case "i":
+                        line_read = false;
                         return "sc.nextInt()";
                     case "l":
+                        line_read = false;
                         return "sc.nextLong()";
                     case "d":
+                        line_read = false;
                         return "sc.nextDouble()";
                     case "s":
                         line_read = true;
                         return "sc.nextLine()";
                     case "t":
+                        line_read = false;
                         return "sc.next()";
                     default:
                         return "new " + type + "()";
@@ -804,6 +811,9 @@ public class Wizard {
         sb.append("    @Override\n");
         sb.append("    public void solve() throws IOException {\n");
         tree.peek().render_process("        ", sb);
+        if(!Variable.line_read) {
+            sb.append("        sc.nextLine();\n");
+        }
         write_code_banner("        ", sb);
         saved_code_pos = sb.length();
         sb.append("    }\n");
