@@ -59,7 +59,7 @@ public class Wizard {
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
-//        new Wizard().run(new String[]{"-stdout", "A", "?ca[]/ik"});
+//        new Wizard().run(new String[]{"-stdout", "A", "?in,m/(n;ia,b/(m;ic,d))"});
     }
 
     private static void usage() {
@@ -256,6 +256,27 @@ public class Wizard {
                             append(" = 0; ").append(get_render_condition(v)).
                             append("; ").append(v[1]).append("++) {\n");
                     space += TAB_SPACE;
+                    if(!lengths.isEmpty() && type.startsWith("$T")) {
+                        Variable var = new Variable();
+                        var.type = type;
+                        var.parent = parent;
+                        var.name = name;
+                        var.is_field = is_field;
+                        sb.append(space);
+                        if (is_field) {
+                            String path = var.get_path();
+                            if (path != null) {
+                                sb.append(path);
+                                if (!"&".equals(var.name) && !"0".equals(var.name)) {
+                                    sb.append(".");
+                                }
+                            }
+                        }
+                        if (!"&".equals(var.name) && !"0".equals(var.name)) {
+                            sb.append(var.name);
+                        }
+                        sb.append(" = ").append(var.get_render_init()).append(";\n");
+                    }
                 } else {
                     break;
                 }
