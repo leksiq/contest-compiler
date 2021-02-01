@@ -59,7 +59,7 @@ public class Wizard {
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
-//        new Wizard().run(new String[]{"-stdout", "A", "?in,m/(n;ia,b/(m;ic,d))"});
+//        new Wizard().run(new String[]{"-stdout", "A", "+in/{n;il,r/}"});
     }
 
     private static void usage() {
@@ -256,7 +256,7 @@ public class Wizard {
                             append(" = 0; ").append(get_render_condition(v)).
                             append("; ").append(v[1]).append("++) {\n");
                     space += TAB_SPACE;
-                    if(!lengths.isEmpty() && type.startsWith("$T")) {
+                    if(! is_action && !lengths.isEmpty() && type.startsWith("$T")) {
                         Variable var = new Variable();
                         var.type = type;
                         var.parent = parent;
