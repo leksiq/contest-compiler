@@ -87,6 +87,7 @@ public abstract class Solver {
         }
         if(!"".equals(localNameIn)) {
             nameIn = localNameIn;
+            nameOut = null;
         }
     }
     
