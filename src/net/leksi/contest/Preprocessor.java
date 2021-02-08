@@ -697,7 +697,13 @@ class Preprocessor {
 //                                if(debug) System.out.println("replace_invoked_static: " + replace_invoked_static);
 //                                if(debug) System.out.println("token: " + token);
                                 if((i == 0 || !"!.".equals(tokens.get(i - 1))) && replace_invoked_static.containsKey(token)) {
-                                    token = replace_invoked_static.get(token);
+                                    int pos = i + 1;
+                                    while(pos < tokens.size() && " ".equals(tokens.get(pos))) {
+                                        pos++;
+                                    }
+                                    if(pos == tokens.size() || "!(".equals(tokens.get(pos))) {
+                                        token = replace_invoked_static.get(token);
+                                    }
                                 }
                                 sb1.append(token);
                                 line_length[0] += tokens.get(i).length() - 1;
