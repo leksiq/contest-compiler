@@ -96,7 +96,6 @@
             <fileset dir="${src.dir}">
                 <include name="net/leksi/contest/Solver.java"/>
                 <include name="net/leksi/contest/MyScanner.java"/>
-                <include name="net/leksi/contest/Pair.java"/>
             </fileset>
             <fileset dir="${src.src.dir}">
                 <include name="net/leksi/contest/demo/IntArraySorter.java"/>

@@ -40,6 +40,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -144,6 +145,7 @@ class Preprocessor {
         TreeSet<String> sources = new TreeSet<>();
         TreeSet<String> main_exceptions = new TreeSet<>();
         TreeSet<String> probed_paths = new TreeSet<>();
+        TreeSet<String> invoked_static = new TreeSet<>();
         String[] main_java = new String[]{null};
         boolean[] failed = new boolean[]{false};
 
@@ -385,6 +387,7 @@ class Preprocessor {
                                             }
                                             break;
                                         case OPER:
+                                            boolean invokestatic = false;
                                             selector = 0;
                                             tokens = Arrays.stream(line.replace("(", " ( ").replace(")", " ) ").replace(";", " ; ").replace(".", " . ").split(TOKENIZER)).filter(s -> !KEYWORDS.contains(s) && !s.isEmpty()).toArray(i -> new String[i]);
                                             if(debug && !skip) { System.out.println(INDENTION + "tokens: " + Arrays.stream(tokens).collect(Collectors.joining(", ", "[", "]"))); }
@@ -406,6 +409,9 @@ class Preprocessor {
                                                     wf[0] = WaitingFor.LOOKUP_SWITCH;
                                                     break;
                                                 }
+                                                if(s.equals("invokestatic")) {
+                                                    invokestatic = true;
+                                                }
                                                 if(selector == 0) {
                                                     if(s.equals("//")) {
                                                         selector++;
@@ -415,6 +421,10 @@ class Preprocessor {
                                                         selector = 2;
                                                         if(s.equals("Field")) {
                                                             i++; //skip field name
+                                                        } else if(invokestatic && s.equals("Method")) {
+                                                            if(tokens[i + 2].equals(".")) {
+                                                                invoked_static.add(tokens[i + 1].replace("/", ".") + tokens[i + 2] + tokens[i + 3]);
+                                                            }
                                                         }
                                                     }
                                                     String last_added_token = null;
@@ -542,9 +552,16 @@ class Preprocessor {
                 }
                 first[0] = false;
             }
+            if(debug) { System.out.println("invoked_static: " + invoked_static); }
+            List<String> invoked_static_to_remove = invoked_static.stream().filter(v -> {
+                String pkg = v.substring(0, v.lastIndexOf("."));
+                return !decompiledClasses.contains(pkg);
+            }).collect(Collectors.toList());
+            invoked_static.removeAll(invoked_static_to_remove);
             if(debug) { System.out.println("touched: " + touched); }
             if(debug) { System.out.println("decompiled: " + decompiledClasses); }
             if(debug) { System.out.println("sources: " + sources); }
+            if(debug) { System.out.println("invoked_static: " + invoked_static); }
             sources.remove(main_java[0]);
             String java = main_java[0];
             String new_java = "";
@@ -556,6 +573,7 @@ class Preprocessor {
             StringBuilder sb1 = new StringBuilder();
             String underline = "";
             int[] line_length = new int[]{0};
+            TreeMap<String, String> replace_invoked_static = new TreeMap<>();
             while(java != null) {
                 probed_paths.clear();
                 File fJava = new File(java);
@@ -592,7 +610,8 @@ class Preprocessor {
                     boolean class_started = false;
                     boolean doNotCopy = false;
 //                    line_length[0] = 0;
-//                    System.out.println(tokens);
+//                    if(debug) System.out.println(tokens);
+                    replace_invoked_static.clear();
                     for(int i = 0; i < tokens.size(); i++) {
                         if("?import".equals(tokens.get(i))) {
                             int j = i;
@@ -601,8 +620,32 @@ class Preprocessor {
                                     break;
                                 }
                             }
-                            String imp = tokens.subList(i, j + 1).stream().map(v -> v.startsWith("?") || v.startsWith("!") ? v.substring(1) : v).collect(Collectors.joining());
-                            imports.add(imp);
+                            boolean[] import_static = new boolean[]{false};
+                            String imp = tokens.subList(i, j + 1).stream().map(v -> {
+                                if("?static".equals(v)) {
+                                    import_static[0] = true;
+                                }
+                                return v.startsWith("?") || v.startsWith("!") ? v.substring(1) : v;
+                            }).collect(Collectors.joining());
+                            if(import_static[0]) {
+                                String cl = imp.replaceAll("\\b(import|static)\\b", "").trim();
+                                cl = cl.substring(0, cl.lastIndexOf(";"));
+//                                if(debug) System.out.println("cl: " + cl);
+                                String key = cl.substring(cl.lastIndexOf(".") + 1);
+//                                if(debug) System.out.println("key: " + key);
+                                if (!replace_invoked_static.containsKey(key)) {
+                                    String val = cl.substring(0, cl.length() - key.length() - 1);
+                                    val = val.substring(val.lastIndexOf(".") + 1) + "." + key;
+//                                    if(debug) System.out.println("val: " + val);
+                                    replace_invoked_static.put(key, val);
+                                }
+                                if (!invoked_static.contains(cl)) {
+                                    import_static[0] = false;
+                                }
+                            }
+                            if(!import_static[0]) {
+                                imports.add(imp);
+                            }
                             i = j;
                         } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) || "?enum".equals(tokens.get(i)))) {
                             if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
@@ -650,7 +693,13 @@ class Preprocessor {
                                     line_length[0] = 0;
                                 }
                             } else if(class_started && !doNotCopy) {
-                                sb1.append(tokens.get(i).substring(1));
+                                String token = tokens.get(i).substring(1);
+//                                if(debug) System.out.println("replace_invoked_static: " + replace_invoked_static);
+//                                if(debug) System.out.println("token: " + token);
+                                if((i == 0 || !"!.".equals(tokens.get(i - 1))) && replace_invoked_static.containsKey(token)) {
+                                    token = replace_invoked_static.get(token);
+                                }
+                                sb1.append(token);
                                 line_length[0] += tokens.get(i).length() - 1;
                             }
                         }
@@ -706,6 +755,7 @@ class Preprocessor {
                     line_length[0] = 0;
                 }
             });
+            if(debug) System.out.println("replace_invoked_static: " + replace_invoked_static);
             int l = sb1.length();
             sb1.append("public class _").append(main_class).append(" {");
             line_length[0] += sb1.length() - l;

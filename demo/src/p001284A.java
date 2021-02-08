@@ -16,12 +16,14 @@ public class p001284A extends Solver {
         int n = sc.nextInt();
         int m = sc.nextInt();
         sc.nextLine();
-        String[] s = lineToArray();
-        String[] t = lineToArray();
+        String[] s = sc.nextLine().trim().split("\\s+");
+        String[] t = sc.nextLine().trim().split("\\s+");
         int q = sc.nextInt();
+        sc.nextLine();
         int[] y = new int[q];
         for(int $i2 = 0; $i2 < q; $i2++) {
             y[$i2] = sc.nextInt();
+            sc.nextLine();
         }
         /**************************/
         /* Write your code below. */
@@ -31,6 +33,7 @@ public class p001284A extends Solver {
             pw.println(st);
         }
         /*^^^^^^^^^^^^^^^^^^^^^^^^*/
+
     }
     static public void main(String[] args) throws IOException {
         new p001284A().run();

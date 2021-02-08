@@ -342,19 +342,19 @@ public class Wizard {
                 switch (type) {
                     case "c":
                         line_read = true;
-                        return "lineToCharArray()";
+                        return "sc.nextLine().chars().toArray()";
                     case "i":
                         line_read = true;
-                        return "lineToIntArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToInt(Integer::parseInt).toArray()";
                     case "l":
                         line_read = true;
-                        return "lineToLongArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToLong(Long::parseLong).toArray()";
                     case "d":
                         line_read = true;
-                        return "lineToDoubleArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToDouble(Double::parseDouble).toArray()";
                     case "t":
                         line_read = true;
-                        return "lineToArray()";
+                        return "sc.nextLine().trim().split(\"\\\\s+\")";
                 }
             }
             int rest_dimentions = get_dimensions() - lengths.size();
@@ -809,6 +809,7 @@ public class Wizard {
             sb.append("package ").append(pkg).append(";\n");
         }
         sb.append("import java.io.IOException;\n");
+        sb.append("import java.util.Arrays;\n");
         sb.append("import net.leksi.contest.Solver;\n");
         sb.append("public class ").append(class_name).append(" extends Solver {\n");
         sb.append("    public ").append(class_name).append("() {\n");
