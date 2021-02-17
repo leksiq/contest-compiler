@@ -755,7 +755,6 @@ class Preprocessor {
                     cl = cl.substring("static".length()).trim();
                     cl = cl.substring(0, cl.lastIndexOf("."));
                 }
-                System.out.println(cl);
                 return !decompiledClasses.contains(cl) && sb.toString().contains(cl.substring(cl.lastIndexOf(".") + 1));
             }).forEach(v -> {
                 v = v.trim();
