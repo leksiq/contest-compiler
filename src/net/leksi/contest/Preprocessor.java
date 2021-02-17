@@ -751,6 +751,11 @@ class Preprocessor {
             imports.stream().filter(v -> {
                 String cl = v.substring(v.indexOf("import") + "import".length()).trim();
                 cl = cl.substring(0, cl.indexOf(";"));
+                if(cl.startsWith("static")) {
+                    cl = cl.substring("static".length()).trim();
+                    cl = cl.substring(0, cl.lastIndexOf("."));
+                }
+                System.out.println(cl);
                 return !decompiledClasses.contains(cl) && sb.toString().contains(cl.substring(cl.lastIndexOf(".") + 1));
             }).forEach(v -> {
                 v = v.trim();
