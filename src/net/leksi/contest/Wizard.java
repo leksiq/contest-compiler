@@ -80,6 +80,9 @@ public class Wizard {
     
     static final int TAB_LEN = 4;
     static final String TAB_SPACE = String.format("%" + TAB_LEN + "s", "");
+    
+    TreeSet<String> need_import = new TreeSet<>();
+    boolean line_read = false;
 
     private void version() {
         try {
@@ -165,8 +168,7 @@ public class Wizard {
         sb.append(space).append("/*^^^^^^^^^^^^^^^^^^^^^^^^*/\n");
     }
     
-    static class Variable {
-        static boolean line_read = false;
+    class Variable {
         String type = null;
         String name = null;
         Stack<String[]> lengths = new Stack<>();
@@ -345,12 +347,15 @@ public class Wizard {
                         return "sc.nextLine().chars().toArray()";
                     case "i":
                         line_read = true;
+                        need_import.add("java.util.Arrays");
                         return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToInt(Integer::parseInt).toArray()";
                     case "l":
                         line_read = true;
+                        need_import.add("java.util.Arrays");
                         return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToLong(Long::parseLong).toArray()";
                     case "d":
                         line_read = true;
+                        need_import.add("java.util.Arrays");
                         return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToDouble(Double::parseDouble).toArray()";
                     case "t":
                         line_read = true;
@@ -773,7 +778,7 @@ public class Wizard {
         
         
         index_gen = 0;
-        Variable.line_read = false;
+        line_read = false;
         
         StringBuilder sb = new StringBuilder();
 
@@ -809,8 +814,8 @@ public class Wizard {
             sb.append("package ").append(pkg).append(";\n");
         }
         sb.append("import java.io.IOException;\n");
-        sb.append("import java.util.Arrays;\n");
         sb.append("import net.leksi.contest.Solver;\n");
+        need_import.forEach(v -> sb.append(v).append(";\n"));
         sb.append("public class ").append(class_name).append(" extends Solver {\n");
         sb.append("    public ").append(class_name).append("() {\n");
         if(singleTest[0]) {
@@ -833,7 +838,7 @@ public class Wizard {
         sb.append("    @Override\n");
         sb.append("    public void solve() throws IOException {\n");
         tree.peek().render_process("        ", sb);
-        if(!Variable.line_read) {
+        if(!line_read) {
             sb.append("        sc.nextLine();\n");
         }
         write_code_banner("        ", sb);
