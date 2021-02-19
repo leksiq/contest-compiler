@@ -815,6 +815,7 @@ public class Wizard {
         }
         sb.append("import java.io.IOException;\n");
         sb.append("import net.leksi.contest.Solver;\n");
+        sb.append("<NEEDED_IMPORTS>");
         need_import.forEach(v -> sb.append(v).append(";\n"));
         sb.append("public class ").append(class_name).append(" extends Solver {\n");
         sb.append("    public ").append(class_name).append("() {\n");
@@ -848,6 +849,9 @@ public class Wizard {
         sb.append("        new ").append(class_name).append("().run();\n");
         sb.append("    }\n");
         sb.append("}\n");
+        int impos = sb.indexOf("<NEEDED_IMPORTS>");
+        String imp = !need_import.isEmpty() ? need_import.stream().map(v -> "import " + v + ";\n").collect(Collectors.joining()) : "";
+        sb.replace(impos, impos + "<NEEDED_IMPORTS>".length(), imp);
     }
 
     private void render_code(String[] args, StringBuilder sb) throws IOException {
