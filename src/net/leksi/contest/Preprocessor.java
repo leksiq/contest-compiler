@@ -610,7 +610,8 @@ class Preprocessor {
                     boolean class_started = false;
                     boolean doNotCopy = false;
 //                    line_length[0] = 0;
-//                    if(debug) System.out.println(tokens);
+//                    System.out.println(classname);
+//                    System.out.println(tokens);
                     replace_invoked_static.clear();
                     for(int i = 0; i < tokens.size(); i++) {
                         if("?import".equals(tokens.get(i))) {
@@ -647,6 +648,8 @@ class Preprocessor {
                                 imports.add(imp);
                             }
                             i = j;
+                        } else if("?class".equals(tokens.get(i)) && tokens.get(i - 1).contains(".")) {
+                                sb1.append("class");
                         } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) || "?enum".equals(tokens.get(i)))) {
                             if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
                                 sb1.append("static ");
