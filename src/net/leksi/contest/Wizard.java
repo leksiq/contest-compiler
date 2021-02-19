@@ -813,10 +813,9 @@ public class Wizard {
         if(pkg != null) {
             sb.append("package ").append(pkg).append(";\n");
         }
-        sb.append("import java.io.IOException;\n");
-        sb.append("import net.leksi.contest.Solver;\n");
+        need_import.add("java.io.IOException");
+        need_import.add("net.leksi.contest.Solver");
         sb.append("<NEEDED_IMPORTS>");
-        need_import.forEach(v -> sb.append(v).append(";\n"));
         sb.append("public class ").append(class_name).append(" extends Solver {\n");
         sb.append("    public ").append(class_name).append("() {\n");
         if(singleTest[0]) {
