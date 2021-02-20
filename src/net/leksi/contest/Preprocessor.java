@@ -304,6 +304,10 @@ class Preprocessor {
                                             wf[0] = WaitingFor.METHOD_OR_FIELD;
                                             break;
                                         case METHOD_OR_FIELD:
+                                            if("}".equals(line)) {
+                                                wf[0] = WaitingFor.DONE;
+                                                break;
+                                            }
                                             selector = 0;
                                             foundClassesAtMethod.clear();
                                             skip = false;
@@ -333,7 +337,7 @@ class Preprocessor {
                                                     }
                                                     selector++;
                                                 } else {
-                                                    if(selector == 0 && (tokens[i + 1].equals("(") || tokens[i + 1].equals(";"))) {
+                                                    if(selector == 0 && i + 1 < tokens.length && (tokens[i + 1].equals("(") || tokens[i + 1].equals(";"))) {
                                                         name = s;
                                                         if(skipPrefix != null && s.startsWith(skipPrefix)) {
                                                             skip = true;
@@ -487,7 +491,7 @@ class Preprocessor {
                                                             }
                                                             if(!skip && !token_to_add.isEmpty()) {
                                                                 last_added_token = token_to_add;
-                                                                if(!used.test(token_to_add)) {
+                                                                if(!used.test(token_to_add) && !";".equals(token_to_add)) {
                                                                     if(debug) { System.out.println(INDENTION + "--found " + loded_case + ": " + token_to_add); }
                                                                     foundClasses.add(token_to_add);
                                                                 }
@@ -649,21 +653,44 @@ class Preprocessor {
                             }
                             i = j;
                         } else if("?class".equals(tokens.get(i)) && tokens.get(i - 1).contains(".")) {
+                            if(!doNotCopy) {
                                 sb1.append("class");
-                        } else if(("?class".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) || "?enum".equals(tokens.get(i)))) {
-                            if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
-                                sb1.append("static ");
-                                line_length[0] += "static ".length();
                             }
-                            sb1.append("private ");
-                            line_length[0] += "private ".length();
-                            if(isAbstract) {
-                                sb1.append("abstract ");
-                                line_length[0] += "abstract ".length();
+                        } else if(tokens.get(i).startsWith("?@")) {
+                            if(!doNotCopy) {
+                                sb1.append(tokens.get(i).substring(1));
+                                class_started = true;
                             }
-                            sb1.append(tokens.get(i).substring(1));
-                            line_length[0] += tokens.get(i).length() - 1;
-                            class_started = true;
+                        } else if(("?class".equals(tokens.get(i)) || "?@interface".equals(tokens.get(i)) || "?interface".equals(tokens.get(i)) || "?enum".equals(tokens.get(i)))) {
+                            if(!doNotCopy) {
+                                int j = i - 1;
+                                boolean is_static = false;
+                                for(; j >= 0; j--) {
+                                    if(" ".equals(tokens.get(j)) || "?private".equals(tokens.get(j)) || "?public".equals(tokens.get(j)) || "?abstract".equals(tokens.get(j))) {
+
+                                    } else if("?static".equals(tokens.get(j))) {
+                                        is_static = true;
+                                        break;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                if(!is_static) {
+                                    if(!sb1.substring(sb1.length() - Math.min(10, sb1.length())).trim().endsWith("static")) {
+                                        sb1.append("static ");
+                                        line_length[0] += "static ".length();
+                                    }
+                                    sb1.append("private ");
+                                    line_length[0] += "private ".length();
+                                }
+                                if(isAbstract) {
+                                    sb1.append("abstract ");
+                                    line_length[0] += "abstract ".length();
+                                }
+                                sb1.append(tokens.get(i).substring(1));
+                                line_length[0] += tokens.get(i).length() - 1;
+                                class_started = true;
+                            }
                         } else if("?abstract".equals(tokens.get(i))) {
                             if(!class_started) {
                                 isAbstract = true;
