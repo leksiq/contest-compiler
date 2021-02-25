@@ -666,9 +666,11 @@ class Preprocessor {
                                 int j = i - 1;
                                 boolean is_static = false;
                                 boolean is_interface = "?interface".equals(tokens.get(i));
+                                boolean has_access_modifier = false;
                                 for(; j >= 0; j--) {
-                                    if(" ".equals(tokens.get(j)) || "?private".equals(tokens.get(j)) || "?public".equals(tokens.get(j)) || "?abstract".equals(tokens.get(j))) {
-
+                                    if(" ".equals(tokens.get(j))){
+                                    } else if("?private".equals(tokens.get(j)) || "?public".equals(tokens.get(j)) || "?abstract".equals(tokens.get(j))) {
+                                        has_access_modifier = true;
                                     } else if("?static".equals(tokens.get(j))) {
                                         is_static = true;
                                         break;
@@ -681,7 +683,7 @@ class Preprocessor {
                                         sb1.append("static ");
                                         line_length[0] += "static ".length();
                                     }
-                                    if(!is_interface) {
+                                    if(!is_interface && !has_access_modifier) {
                                         sb1.append("private ");
                                         line_length[0] += "private ".length();
                                     }
