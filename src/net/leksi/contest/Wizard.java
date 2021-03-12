@@ -348,18 +348,18 @@ public class Wizard {
                     case "i":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToInt(Integer::parseInt).toArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).toArray()";
                     case "l":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToLong(Long::parseLong).toArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToLong(Long::parseLong).toArray()";
                     case "d":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).mapToDouble(Double::parseDouble).toArray()";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToDouble(Double::parseDouble).toArray()";
                     case "t":
                         line_read = true;
-                        return "sc.nextLine().trim().split(\"\\\\s+\")";
+                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).toArray()";
                 }
             }
             int rest_dimentions = get_dimensions() - lengths.size();
