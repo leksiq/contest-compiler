@@ -28,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.security.AccessControlException;
 
 public abstract class Solver {
@@ -42,7 +41,6 @@ public abstract class Solver {
     protected PrintStream debugPrintStream = null;
     
     protected MyScanner sc = null;
-    protected PrintWriter pw = null;
     
     /*+Preprocess-DONOTCOPY*/
     
@@ -96,20 +94,29 @@ public abstract class Solver {
             for(current_test = 1; current_test <= count_tests; current_test++) {
                 /*+Preprocess-DONOTCOPY*/
                 if(localMultiTest) {
-                    pw.println("--- test " + current_test + " ---");
+                    System.out.println("--- test " + current_test + " ---");
                 } else if(localShowTestCases) {
-                    pw.println("--- test case " + current_test + " ---");
+                    System.out.println("--- test case " + current_test + " ---");
                 }
                 /*-Preprocess-DONOTCOPY*/
                 solve();
-                pw.flush();
+                System.out.flush();
             }
         } else {
             count_tests = 1;
             current_test = 1;
             solve();
-            pw.flush();
+            System.out.flush();
         }
+        /*+Preprocess-DONOTCOPY*/
+        if(doNotPreprocess) {
+            System.out.println("/*********************************/");
+            System.out.println("/* Warning! doNotPreprocess=true */");
+            System.out.println("/* Target file is not compiled!  */");
+            System.out.println("/*********************************/");
+            System.out.flush();
+        }
+        /*-Preprocess-DONOTCOPY*/
     }
     
     abstract protected void solve() throws IOException;
@@ -123,11 +130,10 @@ public abstract class Solver {
             if(nameIn != null && new File(nameIn).exists()) {
                     try (
                         FileInputStream fis = new FileInputStream(nameIn);
-                        PrintWriter pw0 = select_output();
                     ) {
+                        select_output();
                         done = true;
                         sc = new MyScanner(fis);
-                        pw = pw0;
                         process();
                     }
             }
@@ -135,25 +141,20 @@ public abstract class Solver {
         } catch(AccessControlException ex) {
         }
         if(!done) {
-            try (
-                PrintWriter pw0 = select_output();
-            ) {
-                sc = new MyScanner(System.in);
-                pw = pw0;
-                process();
-            }
+            select_output();
+            sc = new MyScanner(System.in);
+            process();
         }
     }
 
-    private PrintWriter select_output() throws FileNotFoundException {
+    private void select_output() throws FileNotFoundException {
         /*+Preprocess-DONOTCOPY*/
         if (preprocessDebug && debugPrintStream != null) {
-            return new PrintWriter(debugPrintStream);
-        }
+            System.setOut(debugPrintStream);
+        } else 
         /*-Preprocess-DONOTCOPY*/
         if (nameOut != null) {
-            return new PrintWriter(nameOut);
+            System.setOut(new PrintStream(nameOut));
         }
-        return new PrintWriter(System.out);
     }
 }

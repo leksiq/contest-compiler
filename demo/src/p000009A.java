@@ -25,7 +25,7 @@ public class p000009A extends Solver {
         int nod = GreatestCommonFactor(A, B);
         A /= nod;
         B /= nod;
-        pw.println(A + "/" + B);
+        System.out.println(A + "/" + B);
         /*^^^^^^^^^^^^^^^^^^^^^^^^*/
     }
     static public void main(String[] args) throws IOException {
