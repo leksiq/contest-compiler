@@ -36,12 +36,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,14 +57,15 @@ import java.util.stream.IntStream;
 public class Wizard {
     
     static public void main(final String[] args) throws IOException {
-        new Wizard().run(args);
+//        new Wizard().run(args);
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/(n;(m;ia[k][]/)/)"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/(n;ia[m])"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][]"});
-//        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
+        new Wizard().run(new String[]{"-stdout", "A", "?in/ia[n][m][k][]"});
 //        new Wizard().run(new String[]{"-stdout", "A", "+in/{n;il,r/}"});
+//        new Wizard().run(new String[]{"-stdout", "A", "in,m/{m;iop,args[]/}"});
     }
 
     private static void usage() {
@@ -166,6 +172,119 @@ public class Wizard {
         sb.append(space).append("/*vvvvvvvvvvvvvvvvvvvvvvvv*/\n");
         sb.append(space).append("\n");
         sb.append(space).append("/*^^^^^^^^^^^^^^^^^^^^^^^^*/\n");
+    }
+    
+    
+
+    private String rewrite(String name, String _render_init) {
+        return _render_init.
+                replace("sc.nextInt()", "(" + name + "_min + (int)Math.floor(Math.random() * (" + name + "_max - " + name + "_min + 1)))");
+    }
+    
+    
+    private void generate_test(StringBuilder sb, StringBuilder sb_test) {
+        Pattern scp = Pattern.compile("sc\\.[a-zA-Z]+\\(\\)");
+        Object[] script_walker = new Object[1];
+        TreeMap<String, String> vars = new TreeMap<>();
+        script_walker[0] = new Consumer<Variable>() {
+            @Override
+            public void accept(Variable t) {
+                Consumer<Variable> walker = (Consumer<Variable>)script_walker[0];
+                if(!t.is_action) {
+                    if(!t.name.equals("/")) {
+                        vars.put(t.name, t.type);
+                    }
+                } else {
+                    t.variables.forEach(v -> walker.accept(v));
+                }
+            }
+
+        };
+        ((Consumer<Variable>)script_walker[0]).accept(tree.firstElement());
+        System.out.println(vars);
+        Pattern varsp = Pattern.compile(vars.keySet().stream().collect(Collectors.joining("|", "(", ")(?:\\[[^\\]]*\\])*\\s*=")));
+        int pos = sb.indexOf("public void solve");
+        while(pos > 0 && sb.charAt(pos) != '\n') {
+            pos--;
+        }
+        String s = sb.substring(pos).replace("public void solve", "public void test").
+                replace(" throws IOException", "");
+        s = s.substring(0, s.indexOf("static public void main"));
+        List<String> lines = Arrays.stream(s.split("\\r?\\n")).collect(Collectors.toList());
+        for(int i = 0; i < lines.size(); i++) {
+            Matcher matcher = scp.matcher(lines.get(i));
+            if(matcher.find()) {
+                Matcher matcher1 = varsp.matcher(lines.get(i));
+                if(matcher1.find()) {
+                    System.out.println(matcher + ", " + matcher1);
+                } else {
+                    System.out.println(matcher);
+                }
+            }
+        }
+        System.out.println(lines.stream().collect(Collectors.joining("\n")));
+    }
+    
+    private void generate_test1(StringBuilder sb_test) {
+        TreeMap<String, String> vars = new TreeMap<>();
+        Object[] script_walker = new Object[1]; 
+        int[] indent = new int[]{0};
+        ArrayList<String> lines = new ArrayList<>();
+        Supplier<String> indention = () -> indent[0] == 0 ? "" : String.format("%" + indent[0] + "s", "").replace(" ", "    ");
+        script_walker[0] = new Consumer<Variable>() {
+            @Override
+            public void accept(Variable t) {
+                Consumer<Variable> walker = (Consumer<Variable>)script_walker[0];
+                System.out.println("walker: " + indention.get() + t);
+                if(!t.is_action) {
+                    if(!t.name.equals("/")) {
+                        vars.put(t.name, t.type);
+                        lines.add(indention.get() + t.get_render_type() + " " + t.name + " = " + rewrite(t.name, t.get_render_init()) + ";");
+                        if(t.lengths.isEmpty()) {
+                            lines.add(indention.get() + "pw.print(" + t.name + " + \" \");");
+                        } else {
+                            for(String[] s: t.lengths) {
+                                if(!"+".equals(s[0])) {
+                                    lines.add(indention.get() + "for(int " + 
+                                            s[1] + " = 0; " + 
+                                            s[1] + " < " + 
+                                            s[0] + "; " + 
+                                            s[1] + "++) {");
+                                    indent[0]++;
+                                }
+                            }
+                            for(String[] s: t.lengths) {
+                                if(!"+".equals(s[0])) {
+                                    indent[0]--;
+                                    lines.add(indention.get() + "}");
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if(!t.lengths.isEmpty()) {
+                        lines.add(indention.get() + "for(int " + 
+                                t.lengths.get(t.lengths.size() - 1)[1] + " = 0; " + 
+                                t.lengths.get(t.lengths.size() - 1)[1] + " < " + 
+                                t.lengths.get(t.lengths.size() - 1)[0] + "; " + 
+                                t.lengths.get(t.lengths.size() - 1)[1] + "++) {");
+                    }
+                    indent[0]++;
+                    t.variables.forEach(v -> walker.accept(v));
+                    indent[0]--;
+                    if(!t.lengths.isEmpty()) {
+                        lines.add(indention.get() + "}");
+                    }
+                }
+            }
+
+        };
+        ((Consumer<Variable>)script_walker[0]).accept(tree.firstElement());
+        System.out.println(vars);
+        System.out.println(lines.stream().collect(Collectors.joining("\n")));
+        lines.add("public void test(final int count) {");
+        
+        lines.add("}");
     }
     
     class Variable {
@@ -776,14 +895,17 @@ public class Wizard {
         
         parse_script_to_tree(script, i);
         
+        System.out.println(tree);
         
         index_gen = 0;
         line_read = false;
         
         StringBuilder sb = new StringBuilder();
-
+        StringBuilder sb_test = new StringBuilder();
         
         generate_code(sb);
+        
+        generate_test(sb, sb_test);
         
         render_code(args, sb);
         

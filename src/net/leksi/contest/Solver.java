@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
 
@@ -44,12 +46,24 @@ public abstract class Solver {
     
     /*+Preprocess-DONOTCOPY*/
     
+    
+    private InputStream testInputStream = null;
+    private OutputStream testOutputStream = null;
+    
+    public void setTestInputStream(final InputStream is) {
+        testInputStream = is;
+    }
+    
+    public void setTestOutputStream(final OutputStream os) {
+        testOutputStream = os;
+    }
+    
     protected boolean localMultiTest = false;
     protected String localNameIn = "";
     protected boolean localShowTestCases = false;
     
     private void Preprocess_DONOTCOPY() {
-        if(!doNotPreprocess) {
+        if(!doNotPreprocess && testInputStream == null) {
             String running = getClass().getName();
             if(running.contains("$")) {
                 running = running.substring(0, running.indexOf("$"));
@@ -68,7 +82,7 @@ public abstract class Solver {
         if(localMultiTest) {
             singleTest = false;
         }
-        if(!"".equals(localNameIn)) {
+        if(testInputStream == null && !"".equals(localNameIn)) {
             nameIn = localNameIn;
             nameOut = null;
         }
@@ -109,7 +123,7 @@ public abstract class Solver {
             System.out.flush();
         }
         /*+Preprocess-DONOTCOPY*/
-        if(doNotPreprocess) {
+        if(doNotPreprocess && testOutputStream == null) {
             System.out.println("/*********************************/");
             System.out.println("/* Warning! doNotPreprocess=true */");
             System.out.println("/* Target file is not compiled!  */");
@@ -121,12 +135,18 @@ public abstract class Solver {
     
     abstract protected void solve() throws IOException;
 
-    protected void run() throws IOException {
+    public void run() throws IOException {
         /*+Preprocess-DONOTCOPY*/
         Preprocess_DONOTCOPY();
         /*-Preprocess-DONOTCOPY*/
         boolean done = false;
         try {
+        /*+Preprocess-DONOTCOPY*/
+            if (testInputStream != null) {
+                System.setIn(testInputStream);
+            } else
+        /*-Preprocess-DONOTCOPY*/
+            
             if(nameIn != null && new File(nameIn).exists()) {
                     try (
                         FileInputStream fis = new FileInputStream(nameIn);
@@ -149,7 +169,9 @@ public abstract class Solver {
 
     private void select_output() throws FileNotFoundException {
         /*+Preprocess-DONOTCOPY*/
-        if (preprocessDebug && debugPrintStream != null) {
+        if(testOutputStream != null) {
+            System.setOut(new PrintStream(testOutputStream));
+        } else if (preprocessDebug && debugPrintStream != null) {
             System.setOut(debugPrintStream);
         } else 
         /*-Preprocess-DONOTCOPY*/
