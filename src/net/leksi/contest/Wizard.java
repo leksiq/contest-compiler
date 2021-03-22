@@ -195,7 +195,8 @@ public class Wizard {
         script_walker[0] = new Consumer<Variable>() {
             @Override
             public void accept(Variable t) {
-                Consumer<Variable> walker = (Consumer<Variable>)script_walker[0];
+                @SuppressWarnings("unchecked")
+                final Consumer<Variable> walker = (Consumer<Variable>)script_walker[0];
                 System.out.println("walker: " + indention.get() + t);
                 if(!t.is_action) {
                     if(!t.name.equals("/")) {
@@ -253,7 +254,9 @@ public class Wizard {
             }
 
         };
-        ((Consumer<Variable>)script_walker[0]).accept(tree.firstElement());
+        @SuppressWarnings("unchecked")
+        final Consumer<Variable> walker = (Consumer<Variable>)script_walker[0];
+        walker.accept(tree.firstElement());
         System.out.println(vars);
         int size = lines.size();
         Variable var = new Variable();
@@ -332,6 +335,8 @@ public class Wizard {
                     if(!line_read) {
                         sb.append(space).append("sc.nextLine();\n");
                         line_read = true;
+                    } else {
+                        line_read = false;
                     }
                 } else {
                     sb.append(space);
@@ -885,7 +890,7 @@ public class Wizard {
         line_read = false;
         
         StringBuilder sb = new StringBuilder();
-//        StringBuilder sb_test = new StringBuilder();
+        StringBuilder sb_test = new StringBuilder();
         
         generate_code(sb);
         

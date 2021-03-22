@@ -23,14 +23,19 @@
  */
 package net.leksi.contest;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.security.AccessControlException;
+import java.util.List;
+import java.util.Stack;
 
 public abstract class Solver {
     
@@ -38,53 +43,46 @@ public abstract class Solver {
     protected String nameOut = null;
     protected boolean singleTest = false;
 
-    protected boolean preprocessDebug = false;
-    protected boolean doNotPreprocess = false;
-    protected PrintStream debugPrintStream = null;
-    
     protected MyScanner sc = null;
     
     /*+Preprocess-DONOTCOPY*/
     
-    
-    private InputStream testInputStream = null;
-    private OutputStream testOutputStream = null;
-    
-    public void setTestInputStream(final InputStream is) {
-        testInputStream = is;
-    }
-    
-    public void setTestOutputStream(final OutputStream os) {
-        testOutputStream = os;
-    }
+    protected boolean preprocessDebug = false;
+    protected boolean doNotPreprocess = false;
+    protected PrintStream debugPrintStream = null;
+
+    protected PrintStream tps = null;
     
     protected boolean localMultiTest = false;
     protected String localNameIn = "";
     protected boolean localShowTestCases = false;
+    protected int localRunTester = 0;
     
     private void Preprocess_DONOTCOPY() {
-        if(!doNotPreprocess && testInputStream == null) {
-            String running = getClass().getName();
-            if(running.contains("$")) {
-                running = running.substring(0, running.indexOf("$"));
+        if(localRunTester == 0) {
+            if(!doNotPreprocess) {
+                String running = getClass().getName();
+                if(running.contains("$")) {
+                    running = running.substring(0, running.indexOf("$"));
+                }
+                Preprocessor pp = new Preprocessor();
+                pp.debug(preprocessDebug);
+                if(preprocessDebug && debugPrintStream != null) {
+                    pp.debugPrintStream(debugPrintStream);
+                }
+                pp.skipPrefix("Preprocess_DONOTCOPY");
+                pp.run(running);
+                if(preprocessDebug) {
+                    System.out.println("----- " + running + " output -----");
+                }
             }
-            Preprocessor pp = new Preprocessor();
-            pp.debug(preprocessDebug);
-            if(preprocessDebug && debugPrintStream != null) {
-                pp.debugPrintStream(debugPrintStream);
+            if(localMultiTest) {
+                singleTest = false;
             }
-            pp.skipPrefix("Preprocess_DONOTCOPY");
-            pp.run(running);
-            if(preprocessDebug) {
-                System.out.println("----- " + running + " output -----");
+            if(!"".equals(localNameIn)) {
+                nameIn = localNameIn;
+                nameOut = null;
             }
-        }
-        if(localMultiTest) {
-            singleTest = false;
-        }
-        if(testInputStream == null && !"".equals(localNameIn)) {
-            nameIn = localNameIn;
-            nameOut = null;
         }
     }
     
@@ -123,7 +121,7 @@ public abstract class Solver {
             System.out.flush();
         }
         /*+Preprocess-DONOTCOPY*/
-        if(doNotPreprocess && testOutputStream == null) {
+        if(doNotPreprocess) {
             System.out.println("/*********************************/");
             System.out.println("/* Warning! doNotPreprocess=true */");
             System.out.println("/* Target file is not compiled!  */");
@@ -137,41 +135,42 @@ public abstract class Solver {
 
     public void run() throws IOException {
         /*+Preprocess-DONOTCOPY*/
-        Preprocess_DONOTCOPY();
+        if (localRunTester == 0) {
+            Preprocess_DONOTCOPY();
         /*-Preprocess-DONOTCOPY*/
-        boolean done = false;
-        try {
-        /*+Preprocess-DONOTCOPY*/
-            if (testInputStream != null) {
-                System.setIn(testInputStream);
-            } else
-        /*-Preprocess-DONOTCOPY*/
-            
-            if(nameIn != null && new File(nameIn).exists()) {
-                    try (
-                        FileInputStream fis = new FileInputStream(nameIn);
-                    ) {
-                        select_output();
-                        done = true;
-                        sc = new MyScanner(fis);
-                        process();
+            boolean done = false;
+            try {
+                if(nameIn != null) {
+                    if(new File(nameIn).exists()) {
+                        try (
+                            FileInputStream fis = new FileInputStream(nameIn);
+                        ) {
+                            select_output();
+                            done = true;
+                            sc = new MyScanner(fis);
+                            process();
+                        }
+                    } else {
+                        throw new RuntimeException("File " + new File(nameIn).getAbsolutePath() + " does not exist!");
                     }
+                }
+            } catch(IOException | AccessControlException ex) {}
+            if(!done) {
+                select_output();
+                sc = new MyScanner(System.in);
+                process();
             }
-        } catch(IOException ex) {
-        } catch(AccessControlException ex) {
+        /*+Preprocess-DONOTCOPY*/
+        } else {
+            singleTest = true;
+            tester();
         }
-        if(!done) {
-            select_output();
-            sc = new MyScanner(System.in);
-            process();
-        }
+        /*-Preprocess-DONOTCOPY*/
     }
 
     private void select_output() throws FileNotFoundException {
         /*+Preprocess-DONOTCOPY*/
-        if(testOutputStream != null) {
-            System.setOut(new PrintStream(testOutputStream));
-        } else if (preprocessDebug && debugPrintStream != null) {
+        if (preprocessDebug && debugPrintStream != null) {
             System.setOut(debugPrintStream);
         } else 
         /*-Preprocess-DONOTCOPY*/
@@ -179,4 +178,150 @@ public abstract class Solver {
             System.setOut(new PrintStream(nameOut));
         }
     }
+
+    /*+Preprocess-DONOTCOPY*/
+    
+    protected int getRandomInt(final int min, final int max) {
+        return (min + (int)Math.floor(Math.random() * (max - min + 1)));
+    }
+    
+    protected long getRandomLong(final long min, final long max) {
+       return (min + (long)Math.floor(Math.random() * (max - min + 1)));
+    }
+    
+    protected double getRandomDouble(final double min, final double maxExclusive) {
+        return (min + Math.random() * (maxExclusive - min));
+    }
+    
+    protected Object test_input(){
+        return null;
+    }
+    protected void test(final Object input_data, final List<String> output_data){}
+    
+    private volatile boolean running = true;
+    private volatile boolean waiting_test = false;
+    private volatile boolean waiting_result = false;
+    private volatile Object input_data = null;
+    
+    private Stack<String> solve_output = new Stack<>();
+    
+
+    private final String boundary = "----=_NextPart_001_005A_01D71CDC.D25E57A0\n";
+
+    private void tester() throws IOException {
+        try (
+            final PipedOutputStream output1 = new PipedOutputStream();
+            final InputStream testInputStream = new PipedInputStream(output1);
+            final PipedOutputStream testOutputStream = new PipedOutputStream();
+            final PrintStream ps = new PrintStream(testOutputStream);
+            final PipedInputStream input2 = new PipedInputStream(testOutputStream);
+            final PrintStream tps1 = new PrintStream(output1);
+            final InputStreamReader r2 = new InputStreamReader(input2);
+            final BufferedReader br2 = new BufferedReader(r2);
+        ) {
+            tps = tps1;
+            System.setOut(ps);
+            sc = new MyScanner(testInputStream);
+            
+            Object monitor = this;
+            Object[] monitors = new Object[1];
+
+            Thread tr1 = new Thread(new Runnable() {
+                @Override
+                public synchronized void run() {
+                    monitors[0] = this;
+                    while (running) {
+                        try {
+                            solve();
+                            testOutputStream.write(boundary.getBytes());
+                            waiting_test = true;
+                            wait();
+                            waiting_test = false;
+                        } catch (IOException | InterruptedException ex) {
+                        } catch (Exception ex1) {
+                            running = false;
+                            try {
+                                testOutputStream.write(boundary.getBytes());
+                            } catch (IOException ex) {}
+                            if(input_data != null) {
+                                throw new RuntimeException(input_data.toString(), ex1);
+                            }
+                            throw ex1;
+                        }
+                    }
+                }
+            });
+            Thread tr2 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    while (running) {
+                        solve_output.clear();
+                        try {
+                            while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
+                                solve_output.push(line);
+                            }
+                            test(input_data, solve_output);
+                            if (waiting_result) {
+                                synchronized (monitor) {
+                                    monitor.notifyAll();
+                                }
+                            }
+                        } catch (Exception ex) {
+                            if (ex.getMessage() == null || !ex.getMessage().contains("Write end dead") && !ex.getMessage().contains("Pipe broken")) {
+                                running = false;
+                                ex.printStackTrace(System.err);
+                            }
+                            if (waiting_result) {
+                                synchronized (monitor) {
+                                    monitor.notifyAll();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            tr1.start();
+            tr2.start();
+            
+            int count = 0;
+
+            while(running && localRunTester >= 0) {
+
+                input_data = test_input();
+                synchronized (this) {
+                    waiting_result = true;
+                    try {
+                        wait();
+                    } catch (InterruptedException ex) {
+                    }
+                    waiting_result = false;
+                }
+                if (waiting_test) {
+                    synchronized (monitors[0]) {
+                        monitors[0].notifyAll();
+                    }
+                }
+                if(running) {
+
+                    localRunTester--;
+                    if(localRunTester == 0) {
+                        running = false;
+                    }
+                    count++;
+                    System.err.println(count + " done");
+                }
+            }
+
+            running = false;
+
+            try {
+                tr1.join();
+                tr2.join();
+            } catch (InterruptedException ex) {
+            }
+        }
+    }
+    /*-Preprocess-DONOTCOPY*/
 }
