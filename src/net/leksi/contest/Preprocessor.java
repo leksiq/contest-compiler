@@ -59,13 +59,13 @@ class Preprocessor {
     enum WaitingFor {COMPILED, CLASS, METHOD_OR_FIELD, METHOD, FIELD, CODE, OPER, EXCEPTION_TABLE, TABLE_SWITCH, LOOKUP_SWITCH, DONE, NONE};
     
     static final String TOKENIZER = "\\s+|,|<|>|\\[|\\]|&|:";
-    static final String KEYWORDS = "public|private|protected|final|abstract|static|extends|implements|throws|void|int|char|long|double|float|boolean|switch|case|break";
+    static final String KEYWORDS = "public|private|protected|final|abstract|static|extends|implements|throws|void|int|char|long|double|float|boolean|switch|case|break|synchronized";
     static final String INDENTION = "    ";
     static final String ACCESS_KEYWORDS = "public|private|protected";
     
     Pattern pCompiled = Pattern.compile("^Compiled\\s+from\\s+\"([^.]+\\.java)\"$");
     Pattern pCode = Pattern.compile("^Code:$");
-    Pattern pPrimitiveTypes = Pattern.compile("(?:I|J|D|F|Z|C|V)+");
+    Pattern pPrimitiveTypes = Pattern.compile("(?:B|I|J|D|F|Z|C|V)+");
     Pattern pMain = Pattern.compile("(?:public(?:\\s|$)+static|static(?:\\s|$)+public)(?:\\s|$)+void(?:\\s|$)+(main)(?:\\s|$)*\\(", Pattern.MULTILINE);
     Pattern pMain1 = Pattern.compile("(?:\\s|$)*(_+main)(?:\\s|$)*\\(", Pattern.MULTILINE);
     

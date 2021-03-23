@@ -238,7 +238,7 @@ public abstract class Solver {
                             wait();
                             waiting_test = false;
                         } catch (IOException | InterruptedException ex) {
-                        } catch (Exception ex1) {
+                        } catch (StackOverflowError | Exception ex1) {
                             running = false;
                             try {
                                 testOutputStream.write(boundary.getBytes());
