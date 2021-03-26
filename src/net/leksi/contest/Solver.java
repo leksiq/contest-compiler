@@ -112,23 +112,31 @@ public abstract class Solver {
                 }
                 /*-Preprocess-DONOTCOPY*/
                 solve();
+                /*+Preprocess-DONOTCOPY*/
+                if(doNotPreprocess) {
+                    doNotPreprocessWarning();
+                }
+                /*-Preprocess-DONOTCOPY*/
                 System.out.flush();
             }
         } else {
             count_tests = 1;
             current_test = 1;
             solve();
+            /*+Preprocess-DONOTCOPY*/
+            if(doNotPreprocess) {
+                doNotPreprocessWarning();
+            }
+            /*-Preprocess-DONOTCOPY*/
             System.out.flush();
         }
-        /*+Preprocess-DONOTCOPY*/
-        if(doNotPreprocess) {
-            System.out.println("/*********************************/");
-            System.out.println("/* Warning! doNotPreprocess=true */");
-            System.out.println("/* Target file is not compiled!  */");
-            System.out.println("/*********************************/");
-            System.out.flush();
-        }
-        /*-Preprocess-DONOTCOPY*/
+    }
+    
+    private void doNotPreprocessWarning() {
+        System.out.println("/*********************************/");
+        System.out.println("/* Warning! doNotPreprocess=true */");
+        System.out.println("/* Target file is not compiled!  */");
+        System.out.println("/*********************************/");
     }
     
     abstract protected void solve() throws IOException;
