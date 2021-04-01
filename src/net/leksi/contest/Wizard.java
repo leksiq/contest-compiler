@@ -928,7 +928,6 @@ public class Wizard {
         need_import.add("net.leksi.contest.Solver");
 
         sb.append("<NEEDED_IMPORTS>");
-        sb.append("import static java.lang.System.out;\n");
 
         sb.append("public class ").append(class_name).append(" extends Solver {\n");
         sb.append("    public ").append(class_name).append("() {\n");

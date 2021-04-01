@@ -29,7 +29,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Tokenizer {
@@ -202,7 +201,6 @@ public class Tokenizer {
     }
     
     public static void main(String[] args) throws IOException {
-        args = new String[]{"test/1.txt"};
         try(FileReader r = new FileReader(args[0]);) {
             System.out.println(new Tokenizer().tokenize(r).stream().map(t -> " ".equals(t) ? "__SPACE__" : t).collect(Collectors.joining("\n")));
         }

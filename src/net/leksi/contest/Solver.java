@@ -33,7 +33,9 @@ import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.security.AccessControlException;
+import java.util.Date;
 import java.util.List;
 import java.util.Stack;
 
@@ -44,6 +46,7 @@ public abstract class Solver {
     protected boolean singleTest = false;
 
     protected MyScanner sc = null;
+    protected PrintWriter pw = null;
     
     /*+Preprocess-DONOTCOPY*/
     
@@ -51,12 +54,11 @@ public abstract class Solver {
     protected boolean doNotPreprocess = false;
     protected PrintStream debugPrintStream = null;
 
-    protected PrintStream tps = null;
-    
     protected boolean localMultiTest = false;
     protected String localNameIn = "";
     protected boolean localShowTestCases = false;
     protected int localRunTester = 0;
+    protected long localRunTesterTimeout = 10000;
     
     private void Preprocess_DONOTCOPY() {
         if(localRunTester == 0) {
@@ -73,7 +75,7 @@ public abstract class Solver {
                 pp.skipPrefix("Preprocess_DONOTCOPY");
                 pp.run(running);
                 if(preprocessDebug) {
-                    System.out.println("----- " + running + " output -----");
+                    pw.println("----- " + running + " output -----");
                 }
             }
             if(localMultiTest) {
@@ -84,6 +86,13 @@ public abstract class Solver {
                 nameOut = null;
             }
         }
+    }
+    
+    private void doNotPreprocessWarning() {
+        pw.println("/*********************************/");
+        pw.println("/* Warning! doNotPreprocess=true */");
+        pw.println("/* Target file is not compiled!  */");
+        pw.println("/*********************************/");
     }
     
     /*-Preprocess-DONOTCOPY*/
@@ -106,9 +115,9 @@ public abstract class Solver {
             for(current_test = 1; current_test <= count_tests; current_test++) {
                 /*+Preprocess-DONOTCOPY*/
                 if(localMultiTest) {
-                    System.out.println("--- test " + current_test + " ---");
+                    pw.println("--- test " + current_test + " ---");
                 } else if(localShowTestCases) {
-                    System.out.println("--- test case " + current_test + " ---");
+                    pw.println("--- test case " + current_test + " ---");
                 }
                 /*-Preprocess-DONOTCOPY*/
                 solve();
@@ -117,7 +126,7 @@ public abstract class Solver {
                     doNotPreprocessWarning();
                 }
                 /*-Preprocess-DONOTCOPY*/
-                System.out.flush();
+                pw.flush();
             }
         } else {
             count_tests = 1;
@@ -128,15 +137,7 @@ public abstract class Solver {
                 doNotPreprocessWarning();
             }
             /*-Preprocess-DONOTCOPY*/
-            System.out.flush();
         }
-    }
-    
-    private void doNotPreprocessWarning() {
-        System.out.println("/*********************************/");
-        System.out.println("/* Warning! doNotPreprocess=true */");
-        System.out.println("/* Target file is not compiled!  */");
-        System.out.println("/*********************************/");
     }
     
     abstract protected void solve() throws IOException;
@@ -152,10 +153,12 @@ public abstract class Solver {
                     if(new File(nameIn).exists()) {
                         try (
                             FileInputStream fis = new FileInputStream(nameIn);
+                            PrintWriter pw0 = select_output();
                         ) {
                             select_output();
                             done = true;
                             sc = new MyScanner(fis);
+                            pw = pw0;
                             process();
                         }
                     } else {
@@ -164,9 +167,13 @@ public abstract class Solver {
                 }
             } catch(IOException | AccessControlException ex) {}
             if(!done) {
-                select_output();
-                sc = new MyScanner(System.in);
-                process();
+                try (
+                    PrintWriter pw0 = select_output();
+                ) {
+                    sc = new MyScanner(System.in);
+                    pw = pw0;
+                    process();
+                }
             }
         /*+Preprocess-DONOTCOPY*/
         } else {
@@ -176,15 +183,16 @@ public abstract class Solver {
         /*-Preprocess-DONOTCOPY*/
     }
 
-    private void select_output() throws FileNotFoundException {
+    private PrintWriter select_output() throws FileNotFoundException {
         /*+Preprocess-DONOTCOPY*/
         if (preprocessDebug && debugPrintStream != null) {
-            System.setOut(debugPrintStream);
-        } else 
+            return new PrintWriter(debugPrintStream);
+        }
         /*-Preprocess-DONOTCOPY*/
         if (nameOut != null) {
-            System.setOut(new PrintStream(nameOut));
+            return new PrintWriter(nameOut);
         }
+        return new PrintWriter(System.out);
     }
 
     /*+Preprocess-DONOTCOPY*/
@@ -221,19 +229,19 @@ public abstract class Solver {
             final PipedOutputStream output1 = new PipedOutputStream();
             final InputStream testInputStream = new PipedInputStream(output1);
             final PipedOutputStream testOutputStream = new PipedOutputStream();
-            final PrintStream ps = new PrintStream(testOutputStream);
+            final PrintWriter pw0 = new PrintWriter(testOutputStream);
             final PipedInputStream input2 = new PipedInputStream(testOutputStream);
-            final PrintStream tps1 = new PrintStream(output1);
+            final PrintWriter tpw = new PrintWriter(output1);
             final InputStreamReader r2 = new InputStreamReader(input2);
             final BufferedReader br2 = new BufferedReader(r2);
         ) {
-            tps = tps1;
-            System.setOut(ps);
+            pw = pw0;
+            System.setIn(testInputStream);
             sc = new MyScanner(testInputStream);
             
             Object monitor = this;
             Object[] monitors = new Object[1];
-
+            
             Thread tr1 = new Thread(new Runnable() {
                 @Override
                 public synchronized void run() {
@@ -241,6 +249,7 @@ public abstract class Solver {
                     while (running) {
                         try {
                             solve();
+                            pw.flush();
                             testOutputStream.write(boundary.getBytes());
                             waiting_test = true;
                             wait();
@@ -248,9 +257,7 @@ public abstract class Solver {
                         } catch (IOException | InterruptedException ex) {
                         } catch (StackOverflowError | Exception ex1) {
                             running = false;
-                            try {
-                                testOutputStream.write(boundary.getBytes());
-                            } catch (IOException ex) {}
+                            pw.print(boundary);
                             if(input_data != null) {
                                 throw new RuntimeException(input_data.toString(), ex1);
                             }
@@ -278,8 +285,12 @@ public abstract class Solver {
                         } catch (Exception ex) {
                             if (ex.getMessage() == null || !ex.getMessage().contains("Write end dead") && !ex.getMessage().contains("Pipe broken")) {
                                 running = false;
+                                if(input_data != null) {
+                                    System.err.println(input_data.toString());
+                                }
                                 ex.printStackTrace(System.err);
                             }
+
                             if (waiting_result) {
                                 synchronized (monitor) {
                                     monitor.notifyAll();
@@ -298,10 +309,16 @@ public abstract class Solver {
             while(running && localRunTester >= 0) {
 
                 input_data = test_input();
+                tpw.println(input_data);
+                tpw.flush();
                 synchronized (this) {
                     waiting_result = true;
                     try {
-                        wait();
+                        long start = new Date().getTime();
+                        wait(localRunTesterTimeout);
+                        if(new Date().getTime() - start >= localRunTesterTimeout) {
+                            System.err.println("Seems to hang: " + input_data);
+                        }
                     } catch (InterruptedException ex) {
                     }
                     waiting_result = false;

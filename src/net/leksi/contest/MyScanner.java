@@ -43,7 +43,7 @@ public class MyScanner {
         this.is = is;
     }
     
-    private String charToString(final int c) {
+    public String charToString(final int c) {
         return String.format("'%s'", c == '\n' ? "\\n" : (c == '\r' ? "\\r" : String.valueOf((char)c)));
     }
     
