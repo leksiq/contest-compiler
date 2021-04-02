@@ -241,6 +241,8 @@ public abstract class Solver {
             
             Object monitor = this;
             Object[] monitors = new Object[1];
+
+            Throwable[] throwable = new Throwable[1];
             
             Thread tr1 = new Thread(new Runnable() {
                 @Override
@@ -249,19 +251,21 @@ public abstract class Solver {
                     while (running) {
                         try {
                             solve();
+                            pw.print(boundary);
                             pw.flush();
-                            testOutputStream.write(boundary.getBytes());
                             waiting_test = true;
                             wait();
                             waiting_test = false;
                         } catch (IOException | InterruptedException ex) {
                         } catch (StackOverflowError | Exception ex1) {
                             running = false;
-                            pw.print(boundary);
                             if(input_data != null) {
-                                throw new RuntimeException(input_data.toString(), ex1);
+                                throwable[0] = new RuntimeException(input_data.toString(), ex1);
+                            } else {
+                                throwable[0] = ex1;
                             }
-                            throw ex1;
+                            pw.print(boundary);
+                            pw.flush();
                         }
                     }
                 }
@@ -276,7 +280,9 @@ public abstract class Solver {
                             while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
                                 solve_output.push(line);
                             }
-                            test(input_data, solve_output);
+                            if(throwable[0] == null) {
+                                test(input_data, solve_output);
+                            }
                             if (waiting_result) {
                                 synchronized (monitor) {
                                     monitor.notifyAll();
@@ -286,9 +292,10 @@ public abstract class Solver {
                             if (ex.getMessage() == null || !ex.getMessage().contains("Write end dead") && !ex.getMessage().contains("Pipe broken")) {
                                 running = false;
                                 if(input_data != null) {
-                                    System.err.println(input_data.toString());
+                                    throwable[0] = new RuntimeException(input_data.toString(), ex);
+                                } else {
+                                    throwable[0] = ex;
                                 }
-                                ex.printStackTrace(System.err);
                             }
 
                             if (waiting_result) {
@@ -345,6 +352,10 @@ public abstract class Solver {
                 tr1.join();
                 tr2.join();
             } catch (InterruptedException ex) {
+            }
+            
+            if(throwable[0] != null) {
+                throwable[0].printStackTrace(System.err);
             }
         }
     }
