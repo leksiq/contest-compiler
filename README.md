@@ -157,6 +157,7 @@ Note: all local* fields should be used inside special construction:
         localRunTester = 100;
         /*-Preprocess-DONOTCOPY*/
 ````
+It hides its content from exposing to production.
 
 There are predefined protected fields for reading input and writing to output:
 
