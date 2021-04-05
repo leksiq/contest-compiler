@@ -160,37 +160,40 @@ At the `demo/src` directory one can find files `p00009A.java`, `p001284A.java` a
 
 For example: 
 1. `java -jar net.leksi.contest.assistant.jar p001417A "+in,k/ia[]"` gives us `p001417A.java` stub file:
-````import java.io.IOException;
+````/***********************************************/
+/*!Please, Don't change or delete this comment!*/
+/*             $script$:+in,k/ia[]             */
+/***********************************************/
+import java.io.IOException;
+import java.util.Arrays;
 import net.leksi.contest.Solver;
+import net.leksi.contest.demo.IntArraySorter;
 public class p001417A extends Solver {
     public p001417A() {
-        nameIn = "p001417A.in"; singleTest = false;
-    }
-    /*
-     * Generated from "+in,k/ia[]".
-     */
-    int n;
-    int k;
-    int[] a;
-    @Override
-    protected void solve() {
-        /*
-         * Write your code below.
-         */
+        /*+Preprocess-DONOTCOPY*/
+        localNameIn = "demo/p001417A.in";
+        /*-Preprocess-DONOTCOPY*/
     }
     @Override
-    public void readInput() throws IOException {
-        n = sc.nextInt();
-        k = sc.nextInt();
-        if(sc.hasNextLine()) {
-            sc.nextLine();
-        }
-        a = Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::valueOf).toArray();
+    public void solve() throws IOException {
+        int n = sc.nextInt();
+        int k = sc.nextInt();
+        sc.nextLine();
+        int[] a = Arrays.stream(sc.nextLine().trim().split("\\s+")).mapToInt(Integer::parseInt).toArray();
+        /**************************/
+        /* Write your code below. */
+        /*vvvvvvvvvvvvvvvvvvvvvvvv*/
+        IntArraySorter.sort(a);
+        int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();
+        pw.println(res);
+        /*^^^^^^^^^^^^^^^^^^^^^^^^*/
+
     }
     static public void main(String[] args) throws IOException {
         new p001417A().run();
     }
 }
+
 ````
 2. We write our code, using custom external class `net.leksi.contest.demo.IntArraySorter`, change the location of the sample input file and have:
 ````import java.io.IOException;
