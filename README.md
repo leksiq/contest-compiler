@@ -131,6 +131,9 @@ and optionally reassigning protected fields
     protected PrintStream debugPrintStream = null;
     protected boolean localMultiTest = false;
     protected boolean localnameIn = "";
+    protected boolean localShowTestCases = false;
+    protected int localRunTester = 0;
+
 
 1. `nameIn` - name of input file if the problem requires file input or while testing. Otherwise leave it unchanged (default `null` means console input). If the input file is not found then console input is used, so you may test using file input and submit into "Online Judges" system with console input without changing.
 2. `nameOut` - name of output file if the problem requires file output or while testing, otherwise leave it unchanged (default `null` means console output). **Unlike the previous case you should set `null` if the problem requires console output**.
@@ -138,13 +141,22 @@ and optionally reassigning protected fields
 5. `doNotPreprocess` - set `true` if you need not to compile single source file for "Online Judges" system (for example you don't use user library or are concentrated on testing). Otherwise leave it unchanged (default `false` means single source file compilation at every run).
 6. `preprocessDebug` - set `true` if you want to see what happens at compiling process. Otherwise leave it unchanged (default `false` means no debugging info).
 7. `debugPrintStream` - set `System.err` if you want to get Exception message at the place it is thrown.
-4. `localMultiTest` - set `true` if the problem will be run under single test case at judge system, but multiple ones at a local testing. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `false`  (or leave unchanged default `false`). Note: use this field inside special construction: 
+4. `localMultiTest` - set `true` if the problem will be run under single test case at judge system, but multiple ones at a local testing. In this alternative first line of input will contain one integer - the number of test cases and you need not care to read and process it. Otherwise set `false`  (or leave unchanged default `false`). 
+8. `localnameIn` - set the path to the local input file even if the judge system use stdin. 
+9. `localShowTestCases` - set `true` if you want to delimit test cases' output for visualization. 
+10. `localRunTester` - set positive value to use "load testing". To use that you should overwrite the method 
+`protected Object test_input()` and optionally `protected void test(final Object input_data, final List<String> output_data)`. See **LoadTesting** below for more information.
+
+Note: all local* fields should be used inside special construction: 
 ````    
         /*+Preprocess-DONOTCOPY*/
         localMultiTest = true;
+        localShowTestCases = true;
+        localnameIn = '<some name>';
+        localShowTestCases = true;
+        localRunTester = 100;
         /*-Preprocess-DONOTCOPY*/
 ````
-8. `localnameIn` - set the path to the local input file even if the judge system use stdin.
 
 There are predefined protected fields for reading input and writing to output:
 
@@ -284,3 +296,57 @@ pw=pw0;process();}}}private PrintWriter select_output()throws FileNotFoundExcept
 Try to use java option `-Dnet.leksi.solver.javap.dir=<directory-with-working-javap>`
 
 For example: `java -Dnet.leksi.solver.javap.dir=f:/jdk1.8.0_221/bin -classpath net.leksi.contest.assistant.jar;demo/src p001417A`
+
+## Load Testing
+To find execution errors and compare the used algorithm with a knowingly proper brutal force algorithm you should overwrite two methods:
+1. `protected Object test_input()` used to generate an input data object. Dispate of its internal structure, it must ovewrite `public String toString()` method appropriate to an expected input. For example:
+````
+class TestInput {
+        int n; 
+        int q;
+        int[] a;
+        int[][] op;
+        public String toString() {
+            return n + " " + q + "\n" + 
+                    join(a) + "\n" +
+                    Arrays.stream(op).map(v -> join(v)).collect(Collectors.joining("\n"));
+        }
+        TestInput() {
+            n = getRandomInt(1, 100);
+            q = 10;
+            a = new int[n];
+            for(int i = 0; i < n; i++) {
+                a[i] = getRandomInt(1, 40);
+            }
+            op = new int[q][3];
+            for(int i = 0; i < q; i++) {
+                op[i][0] = getRandomInt(1, 2);
+                if(op[i][0] == 1) {
+                    op[i][1] = getRandomInt(1, n);
+                    op[i][2] = getRandomInt(op[i][1], n);
+                } else {
+                    op[i][1] = getRandomInt(1, n);
+                    op[i][2] = getRandomInt(1, 40);
+                }
+            }
+        }
+        ....
+    }
+
+````
+2. `protected void test(final Object input_data, final List<String> output_data)` used to calculate the answer with another algorithm and to compare it with `solve()` output. `input_data` is an Object generated at `test_input()`, `output_data` is a list of output lines. You may throw an Exception or just print to `System.err` in case of difference.
+
+There are some auxiliary methods to get random numbers:
+````
+    protected int getRandomInt(final int min, final int max);
+    protected long getRandomLong(final long min, final long max);
+    protected double getRandomDouble(final double min, final double maxExclusive);
+````
+All limits are inclusive except the Double maximum.
+
+Note: all load testing staff should be used inside special construction: 
+````    
+        /*+Preprocess-DONOTCOPY*/
+        ...
+        /*-Preprocess-DONOTCOPY*/
+````
