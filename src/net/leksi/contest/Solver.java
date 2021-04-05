@@ -35,7 +35,6 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.security.AccessControlException;
-import java.util.Date;
 import java.util.List;
 import java.util.Stack;
 
@@ -58,7 +57,6 @@ public abstract class Solver {
     protected String localNameIn = "";
     protected boolean localShowTestCases = false;
     protected int localRunTester = 0;
-    protected long localRunTesterTimeout = 10000;
     
     private void Preprocess_DONOTCOPY() {
         if(localRunTester == 0) {
@@ -214,9 +212,6 @@ public abstract class Solver {
     }
     protected void test(final Object input_data, final List<String> output_data){}
     
-    private volatile boolean running = true;
-    private volatile boolean waiting_test = false;
-    private volatile boolean waiting_result = false;
     private volatile Object input_data = null;
     
     private Stack<String> solve_output = new Stack<>();
@@ -224,14 +219,15 @@ public abstract class Solver {
 
     private final String boundary = "----=_NextPart_001_005A_01D71CDC.D25E57A0\n";
 
+
     private void tester() throws IOException {
         try (
             final PipedOutputStream output1 = new PipedOutputStream();
+            final PrintWriter tpw = new PrintWriter(output1);
             final InputStream testInputStream = new PipedInputStream(output1);
             final PipedOutputStream testOutputStream = new PipedOutputStream();
             final PrintWriter pw0 = new PrintWriter(testOutputStream);
             final PipedInputStream input2 = new PipedInputStream(testOutputStream);
-            final PrintWriter tpw = new PrintWriter(output1);
             final InputStreamReader r2 = new InputStreamReader(input2);
             final BufferedReader br2 = new BufferedReader(r2);
         ) {
@@ -239,125 +235,39 @@ public abstract class Solver {
             System.setIn(testInputStream);
             sc = new MyScanner(testInputStream);
             
-            Object monitor = this;
-            Object[] monitors = new Object[1];
-
-            Throwable[] throwable = new Throwable[1];
-            
-            Thread tr1 = new Thread(new Runnable() {
-                @Override
-                public synchronized void run() {
-                    monitors[0] = this;
-                    while (running) {
-                        try {
-                            solve();
-                            pw.print(boundary);
-                            pw.flush();
-                            waiting_test = true;
-                            wait();
-                            waiting_test = false;
-                        } catch (IOException | InterruptedException ex) {
-                        } catch (StackOverflowError | Exception ex1) {
-                            running = false;
-                            if(input_data != null) {
-                                throwable[0] = new RuntimeException(input_data.toString(), ex1);
-                            } else {
-                                throwable[0] = ex1;
-                            }
-                            pw.print(boundary);
-                            pw.flush();
-                        }
-                    }
-                }
-            });
-            Thread tr2 = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String line;
-                    while (running) {
-                        solve_output.clear();
-                        try {
-                            while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
-                                solve_output.push(line);
-                            }
-                            if(throwable[0] == null) {
-                                test(input_data, solve_output);
-                            }
-                            if (waiting_result) {
-                                synchronized (monitor) {
-                                    monitor.notifyAll();
-                                }
-                            }
-                        } catch (Exception ex) {
-                            if (ex.getMessage() == null || !ex.getMessage().contains("Write end dead") && !ex.getMessage().contains("Pipe broken")) {
-                                running = false;
-                                if(input_data != null) {
-                                    throwable[0] = new RuntimeException(input_data.toString(), ex);
-                                } else {
-                                    throwable[0] = ex;
-                                }
-                            }
-
-                            if (waiting_result) {
-                                synchronized (monitor) {
-                                    monitor.notifyAll();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            tr1.start();
-            tr2.start();
-            
             int count = 0;
 
-            while(running && localRunTester >= 0) {
-
+            while(--localRunTester >= 0) {
                 input_data = test_input();
                 tpw.println(input_data);
                 tpw.flush();
-                synchronized (this) {
-                    waiting_result = true;
-                    try {
-                        long start = new Date().getTime();
-                        wait(localRunTesterTimeout);
-                        if(new Date().getTime() - start >= localRunTesterTimeout) {
-                            System.err.println("Seems to hang: " + input_data);
-                        }
-                    } catch (InterruptedException ex) {
-                    }
-                    waiting_result = false;
+                try {
+                    solve();
+                } catch (Exception ex) {
+                    System.err.println("Exception at solve()! input_data: " + input_data + "\n issue: ");
+                    ex.printStackTrace(System.err);
+                    break;
                 }
-                if (waiting_test) {
-                    synchronized (monitors[0]) {
-                        monitors[0].notifyAll();
-                    }
+                pw.print(boundary);
+                pw.flush();
+                String line;
+                solve_output.clear();
+                while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
+                    solve_output.push(line);
                 }
-                if(running) {
-
-                    localRunTester--;
-                    if(localRunTester == 0) {
-                        running = false;
-                    }
-                    count++;
-                    System.err.println(count + " done");
+                try {
+                    test(input_data, solve_output);
+                } catch(Exception ex) {
+                    System.err.println("Exception at test()! input_data: " + input_data + ", issue: ");
+                    ex.printStackTrace(System.err);
+                    break;
                 }
-            }
-
-            running = false;
-
-            try {
-                tr1.join();
-                tr2.join();
-            } catch (InterruptedException ex) {
-            }
-            
-            if(throwable[0] != null) {
-                throwable[0].printStackTrace(System.err);
+                input_data = null;
+                count++;
+                System.err.println(count + " done");
             }
         }
     }
+    
     /*-Preprocess-DONOTCOPY*/
 }

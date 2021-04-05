@@ -23,7 +23,7 @@ public class p001417A extends Solver {
         /*vvvvvvvvvvvvvvvvvvvvvvvv*/
         IntArraySorter.sort(a);
         int res = Arrays.stream(a, 1, n).map(v -> (k - v) / a[0]).sum();
-        System.out.println(res);
+        pw.println(res);
         /*^^^^^^^^^^^^^^^^^^^^^^^^*/
 
     }

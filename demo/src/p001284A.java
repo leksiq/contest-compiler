@@ -30,7 +30,7 @@ public class p001284A extends Solver {
         /*vvvvvvvvvvvvvvvvvvvvvvvv*/
         for (int i = 0; i < q; i++) {
             String st = s[(y[i] - 1) % n] + t[(y[i] - 1) % m];
-            System.out.println(st);
+            pw.println(st);
         }
         /*^^^^^^^^^^^^^^^^^^^^^^^^*/
 
