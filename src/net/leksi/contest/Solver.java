@@ -24,6 +24,7 @@
 package net.leksi.contest;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,6 +35,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.security.AccessControlException;
 import java.util.List;
 import java.util.Stack;
@@ -221,51 +224,45 @@ public abstract class Solver {
 
 
     private void tester() throws IOException {
-        try (
-            final PipedOutputStream output1 = new PipedOutputStream();
-            final PrintWriter tpw = new PrintWriter(output1);
-            final InputStream testInputStream = new PipedInputStream(output1);
-            final PipedOutputStream testOutputStream = new PipedOutputStream();
-            final PrintWriter pw0 = new PrintWriter(testOutputStream);
-            final PipedInputStream input2 = new PipedInputStream(testOutputStream);
-            final InputStreamReader r2 = new InputStreamReader(input2);
-            final BufferedReader br2 = new BufferedReader(r2);
-        ) {
-            pw = pw0;
-            System.setIn(testInputStream);
-            sc = new MyScanner(testInputStream);
             
-            int count = 0;
+        int count = 0;
 
-            while(--localRunTester >= 0) {
-                input_data = test_input();
-                tpw.println(input_data);
-                tpw.flush();
-                try {
-                    solve();
-                } catch (Exception ex) {
-                    System.err.println("Exception at solve()! input_data: " + input_data + "\n issue: ");
-                    ex.printStackTrace(System.err);
-                    break;
-                }
-                pw.print(boundary);
-                pw.flush();
-                String line;
-                solve_output.clear();
-                while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
-                    solve_output.push(line);
-                }
-                try {
-                    test(input_data, solve_output);
-                } catch(Exception ex) {
-                    System.err.println("Exception at test()! input_data: " + input_data + ", issue: ");
-                    ex.printStackTrace(System.err);
-                    break;
-                }
-                input_data = null;
-                count++;
-                System.err.println(count + " done");
+        while(--localRunTester >= 0) {
+            StringWriter sw = new StringWriter();
+            PrintWriter tpw = new PrintWriter(sw);
+            input_data = test_input();
+            tpw.println(input_data);
+            tpw.flush();
+
+            System.setIn(new ByteArrayInputStream(sw.toString().getBytes()));
+            sc = new MyScanner(System.in);
+            StringWriter testOutputStream = new StringWriter();
+            pw = new PrintWriter(testOutputStream);
+            try {
+                solve();
+            } catch (Exception ex) {
+                System.err.println("Exception at solve()! input_data: " + input_data + "\n issue: ");
+                ex.printStackTrace(System.err);
+                break;
             }
+            pw.print(boundary);
+            pw.flush();
+            BufferedReader br2 = new BufferedReader(new StringReader(testOutputStream.toString()));
+            String line;
+            solve_output.clear();
+            while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
+                solve_output.push(line);
+            }
+            try {
+                test(input_data, solve_output);
+            } catch(Exception ex) {
+                System.err.println("Exception at test()! input_data: " + input_data + ", issue: ");
+                ex.printStackTrace(System.err);
+                break;
+            }
+            input_data = null;
+            count++;
+            System.err.println(count + " done");
         }
     }
     

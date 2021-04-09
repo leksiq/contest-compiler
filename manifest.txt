@@ -4,4 +4,4 @@ Name: java-contest-assistant
 Specification-Vendor: Alexey Zakharov <leksi@leksi.net>
 Implementation-Name: java-contest-assistant
 Implementation-Vendor: Alexey Zakharov <leksi@leksi.net>
-Implementation-Version: v2.0.3
+Implementation-Version: v3.0.0
