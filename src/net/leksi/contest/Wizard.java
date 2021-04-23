@@ -458,18 +458,18 @@ public class Wizard {
                     case "i":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).toArray()";
+                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).mapToInt(Integer::parseInt).toArray()", "$s" + Integer.toString(++test_name_gen));
                     case "l":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToLong(Long::parseLong).toArray()";
+                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).mapToLong(Long::parseLong).toArray()", "$s" + Integer.toString(++test_name_gen));
                     case "d":
                         line_read = true;
                         need_import.add("java.util.Arrays");
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).mapToDouble(Double::parseDouble).toArray()";
+                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).mapToDouble(Double::parseDouble).toArray()", "$s" + Integer.toString(++test_name_gen));
                     case "t":
                         line_read = true;
-                        return "Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(s -> !s.isEmpty()).toArray()";
+                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).toArray()", "$s" + Integer.toString(++test_name_gen));
                 }
             }
             int rest_dimentions = get_dimensions() - lengths.size();

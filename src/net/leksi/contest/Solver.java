@@ -29,10 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -198,15 +194,15 @@ public abstract class Solver {
 
     /*+Preprocess-DONOTCOPY*/
     
-    protected int getRandomInt(final int min, final int max) {
+    static public int getRandomInt(final int min, final int max) {
         return (min + (int)Math.floor(Math.random() * (max - min + 1)));
     }
     
-    protected long getRandomLong(final long min, final long max) {
+    static public long getRandomLong(final long min, final long max) {
        return (min + (long)Math.floor(Math.random() * (max - min + 1)));
     }
     
-    protected double getRandomDouble(final double min, final double maxExclusive) {
+    static public double getRandomDouble(final double min, final double maxExclusive) {
         return (min + Math.random() * (maxExclusive - min));
     }
     
@@ -222,12 +218,22 @@ public abstract class Solver {
 
     private final String boundary = "----=_NextPart_001_005A_01D71CDC.D25E57A0\n";
 
+    private boolean break_tester = false;
+    
+    protected void beforeTesting() {}
+    
+    protected void breakTester() {
+        break_tester = true;
+    }
 
     private void tester() throws IOException {
             
         int count = 0;
+        break_tester = false;
+        
+        beforeTesting();
 
-        while(--localRunTester >= 0) {
+        while(!break_tester && --localRunTester >= 0) {
             StringWriter sw = new StringWriter();
             PrintWriter tpw = new PrintWriter(sw);
             input_data = test_input();
