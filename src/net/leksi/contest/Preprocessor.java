@@ -110,10 +110,7 @@ class Preprocessor {
     public void run(final String arg) {
 //        System.out.println(arg);
 
-        
-
-        String classPath = Arrays.stream(((URLClassLoader) (Thread.currentThread().
-                getContextClassLoader())).getURLs()).map(v -> url_decode(v.getPath())).collect(Collectors.joining(File.pathSeparator));
+        String classPath = System.getProperty("java.class.path");
         if(debug) { System.out.println("classpath: " + classPath); }
         
         Map<String, String> env = System.getenv();

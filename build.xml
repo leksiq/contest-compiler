@@ -93,14 +93,6 @@
         <move file="${build.generated.dir}/tmp.jar" tofile="${dist.jar}"/>
 
         <jar destfile="${dist.jar}" update="true">
-            <fileset dir="${src.dir}">
-                <include name="net/leksi/contest/Solver.java"/>
-                <include name="net/leksi/contest/MyScanner.java"/>
-            </fileset>
-            <fileset dir="${src.src.dir}">
-                <include name="net/leksi/contest/demo/IntArraySorter.java"/>
-                <include name="net/leksi/contest/demo/Utility.java"/>
-            </fileset>
             <fileset dir=".">
                 <include name="LICENSE"/>
                 <include name="README.md"/>

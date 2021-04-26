@@ -942,6 +942,8 @@ public class Wizard {
             if(localMultiTest[0]) {
                 sb.append("        localMultiTest = true;\n");
             }
+            sb.append("        //doNotPreprocess = true;\n");
+            sb.append("        //localShowTestCases = true;\n");
             sb.append("        /*-Preprocess-DONOTCOPY*/\n");
         }
         sb.append("    }\n");
