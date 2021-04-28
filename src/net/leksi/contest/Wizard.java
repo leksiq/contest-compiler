@@ -469,7 +469,8 @@ public class Wizard {
                         return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).mapToDouble(Double::parseDouble).toArray()", "$s" + Integer.toString(++test_name_gen));
                     case "t":
                         line_read = true;
-                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).toArray()", "$s" + Integer.toString(++test_name_gen));
+                        need_import.add("java.util.Arrays");
+                        return String.format("Arrays.stream(sc.nextLine().trim().split(\"\\\\s+\")).filter(%1$s -> !%1$s.isEmpty()).toArray(i -> new String[i])", "$s" + Integer.toString(++test_name_gen));
                 }
             }
             int rest_dimentions = get_dimensions() - lengths.size();
