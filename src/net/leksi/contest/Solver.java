@@ -34,7 +34,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.AccessControlException;
-import java.util.List;
+import java.util.Date;
 import java.util.Stack;
 
 public abstract class Solver {
@@ -56,6 +56,7 @@ public abstract class Solver {
     protected String localNameIn = "";
     protected boolean localShowTestCases = false;
     protected int localRunTester = 0;
+    protected long localRunTesterTimeLimit = 5000;
     
     private void Preprocess_DONOTCOPY() {
         if(localRunTester == 0) {
@@ -194,79 +195,74 @@ public abstract class Solver {
 
     /*+Preprocess-DONOTCOPY*/
     
-    static public int getRandomInt(final int min, final int max) {
-        return (min + (int)Math.floor(Math.random() * (max - min + 1)));
-    }
-    
-    static public long getRandomLong(final long min, final long max) {
-       return (min + (long)Math.floor(Math.random() * (max - min + 1)));
-    }
-    
-    static public double getRandomDouble(final double min, final double maxExclusive) {
-        return (min + Math.random() * (maxExclusive - min));
-    }
-    
-    protected Object test_input(){
+    protected Tester createTester(){
         return null;
     }
-    protected void test(final Object input_data, final List<String> output_data){}
-    
-    private volatile Object input_data = null;
     
     private Stack<String> solve_output = new Stack<>();
     
-
-    private final String boundary = "----=_NextPart_001_005A_01D71CDC.D25E57A0\n";
-
-    private boolean break_tester = false;
+    volatile Exception exception_at_thread = null;
     
-    protected void beforeTesting() {}
-    
-    protected void breakTester() {
-        break_tester = true;
-    }
-
     private void tester() throws IOException {
             
         int count = 0;
-        break_tester = false;
         
-        beforeTesting();
+        Tester tester = createTester();
+        
+        if(tester == null) {
+            return;
+            
+        }
+        tester.beforeTesting();
 
-        while(!break_tester && --localRunTester >= 0) {
+        while(!tester.broken() && --localRunTester >= 0) {
             StringWriter sw = new StringWriter();
             PrintWriter tpw = new PrintWriter(sw);
-            input_data = test_input();
-            tpw.println(input_data);
+            tester.generateInput();
+            tpw.println(tester.inputDataToString());
             tpw.flush();
 
             System.setIn(new ByteArrayInputStream(sw.toString().getBytes()));
             sc = new MyScanner(System.in);
             StringWriter testOutputStream = new StringWriter();
             pw = new PrintWriter(testOutputStream);
+            Thread th = new Thread(() -> {
+                try {
+                    solve();
+                } catch (Exception ex) {
+                    exception_at_thread = ex;
+                }
+            });
+            th.start();
             try {
-                solve();
-            } catch (Exception ex) {
-                System.err.println("Exception at solve()! input_data: " + input_data + "\n issue: ");
-                ex.printStackTrace(System.err);
+                long start = new Date().getTime();
+                th.join(localRunTesterTimeLimit);
+                if(new Date().getTime() - start >= localRunTesterTimeLimit) {
+                    System.err.println("Time limit "+ localRunTesterTimeLimit + " ms exceeded at solve()!\ninput_data: " + tester.inputDataToString() + "\n"
+                            + "set localRunTesterTimeLimit field to change this limit.");
+                    Runtime.getRuntime().exit(1);
+                }
+            } catch (InterruptedException ex) {
+            }
+            if(exception_at_thread != null) {
+                System.err.println("Exception at solve()!\ninput_data: " + tester.inputDataToString() + "\nissue: ");
+                exception_at_thread.printStackTrace(System.err);
                 break;
             }
-            pw.print(boundary);
             pw.flush();
             BufferedReader br2 = new BufferedReader(new StringReader(testOutputStream.toString()));
             String line;
             solve_output.clear();
-            while ((line = br2.readLine()) != null && !boundary.trim().equals(line)) {
+            while ((line = br2.readLine()) != null) {
                 solve_output.push(line);
             }
             try {
-                test(input_data, solve_output);
+                tester.testOutput(solve_output);
             } catch(Exception ex) {
-                System.err.println("Exception at test()! input_data: " + input_data + ", issue: ");
+                System.err.println("Exception at test()!\ninput_data: " + tester.inputDataToString() + "\nissue: ");
                 ex.printStackTrace(System.err);
                 break;
             }
-            input_data = null;
             count++;
             System.err.println(count + " done");
         }
