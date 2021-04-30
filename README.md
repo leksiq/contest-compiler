@@ -32,7 +32,7 @@ Running class `net.leksi.contest.Wizard` one gets a *stub* with all input data s
 
 
     
-The "input script" means the script on lightweight special language. This script follows the task input description.
+The "input script" means the script on DSL (domain-specific language). This script follows the task input description.
 ### The Script Language Grammar
 
     script                      ::=     ('+' | '?')? input-of-cycle
