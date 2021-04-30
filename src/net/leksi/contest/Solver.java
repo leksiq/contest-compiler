@@ -119,13 +119,13 @@ public abstract class Solver {
                 }
                 /*-Preprocess-DONOTCOPY*/
                 solve();
-                /*+Preprocess-DONOTCOPY*/
-                if(doNotPreprocess) {
-                    doNotPreprocessWarning();
-                }
-                /*-Preprocess-DONOTCOPY*/
                 pw.flush();
             }
+            /*+Preprocess-DONOTCOPY*/
+            if(doNotPreprocess) {
+                doNotPreprocessWarning();
+            }
+            /*-Preprocess-DONOTCOPY*/
         } else {
             count_tests = 1;
             current_test = 1;

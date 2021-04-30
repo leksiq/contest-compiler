@@ -1,5 +1,4 @@
 Main-Class: net.leksi.contest.Wizard
-
 Name: java-contest-assistant
 Specification-Vendor: Alexey Zakharov <leksi@leksi.net>
 Implementation-Name: java-contest-assistant
