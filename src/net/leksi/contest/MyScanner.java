@@ -104,7 +104,7 @@ public class MyScanner {
                 sb.append((char)c);
             }
         }
-        return sb.toString();
+        return !done && sb.length() == 0 ? null : sb.toString();
     }
 
     private boolean check_linebreak(int c) {
